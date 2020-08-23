@@ -1,0 +1,5 @@
+/*.o
+/moc_*
+/Makefile
+/project
+/.qmake.stash
