@@ -72,8 +72,10 @@ ImageEditor::ImageEditor(QWidget *parent)
 
 void ImageEditor::newFile()
 {
-    Bitmap bitmap(100, 100);
-    QImage image(bitmap.data, bitmap.width, bitmap.height, bitmap.width * 4, QImage::Format_RGBA8888, nullptr, nullptr);
+    /* Bitmap bitmap = bitmap_create(100, 100); */
+    /* QImage image(bitmap.data, bitmap.width, bitmap.height, bitmap.width * 4, QImage::Format_RGBA8888, nullptr, nullptr); */
+    /* imageWidget->image = image; */
+    imageWidget->bitmap = bitmap_create(100, 100);
     imageWidget->setVisible(true);
     imageWidget->adjustSize();
 
@@ -104,6 +106,8 @@ void ImageEditor::open()
     QString message = tr("Opened \"%1\", %2x%3, Depth: %4")
         .arg(QDir::toNativeSeparators(fileName)).arg(imageWidget->image.width()).arg(imageWidget->image.height()).arg(imageWidget->image.depth());
     statusBar()->showMessage(message);
+    /* re-init to change texture, TODO change this */
+    imageWidget->initializeGL();
 }
 
 void ImageEditor::save()
