@@ -1,4 +1,4 @@
-#include "ImageEditor.h"
+#include "Editor.h"
 
 static void initializeImageFileDialog(QFileDialog *dialog, QFileDialog::AcceptMode mode)
 {
@@ -22,59 +22,56 @@ static void initializeImageFileDialog(QFileDialog *dialog, QFileDialog::AcceptMo
         dialog->setDefaultSuffix("jpg");
 }
 
-ImageEditor::ImageEditor(QWidget *parent)
+Editor::Editor(QWidget *parent)
     : QMainWindow(parent), imageWidget(new ImageWidget)
 {
     setCentralWidget(imageWidget);
 
     QMenu *fileMenu = menuBar()->addMenu(tr("&File"));
-    newAction = fileMenu->addAction(tr("&New"), this, &ImageEditor::newFile);
+    newAction = fileMenu->addAction(tr("&New"), this, &Editor::newFile);
     newAction->setShortcut(QKeySequence::New);
-    openAction = fileMenu->addAction(tr("&Open..."), this, &ImageEditor::open);
+    openAction = fileMenu->addAction(tr("&Open..."), this, &Editor::open);
     openAction->setShortcut(QKeySequence::Open);
-    saveAction = fileMenu->addAction(tr("&Save"), this, &ImageEditor::save);
+    saveAction = fileMenu->addAction(tr("&Save"), this, &Editor::save);
     saveAction->setShortcut(QKeySequence::Save);
     saveAction->setEnabled(false);
-    saveAsAction = fileMenu->addAction(tr("Save &As..."), this, &ImageEditor::saveAs);
+    saveAsAction = fileMenu->addAction(tr("Save &As..."), this, &Editor::saveAs);
     saveAsAction->setShortcut(QKeySequence::SaveAs);
     saveAsAction->setEnabled(false);
     fileMenu->addSeparator();
     exitAction = fileMenu->addAction(tr("E&xit"), this, &QWidget::close);
 
     QMenu *editMenu = menuBar()->addMenu(tr("&Edit"));
-    undoAction = editMenu->addAction(tr("&Undo"), this, &ImageEditor::undo);
+    undoAction = editMenu->addAction(tr("&Undo"), this, &Editor::undo);
     undoAction->setShortcut(QKeySequence::Undo);
     undoAction->setEnabled(false);
-    redoAction = editMenu->addAction(tr("&Redo"), this, &ImageEditor::redo);
+    redoAction = editMenu->addAction(tr("&Redo"), this, &Editor::redo);
     redoAction->setShortcut(QKeySequence::Redo);
     redoAction->setEnabled(false);
     editMenu->addSeparator();
-    cutAction = editMenu->addAction(tr("Cu&t"), this, &ImageEditor::cut);
+    cutAction = editMenu->addAction(tr("Cu&t"), this, &Editor::cut);
     cutAction->setShortcut(QKeySequence::Cut);
     cutAction->setEnabled(false);
-    copyAction = editMenu->addAction(tr("&Copy"), this, &ImageEditor::copy);
+    copyAction = editMenu->addAction(tr("&Copy"), this, &Editor::copy);
     copyAction->setShortcut(QKeySequence::Copy);
     copyAction->setEnabled(false);
-    pasteAction = editMenu->addAction(tr("&Paste"), this, &ImageEditor::paste);
+    pasteAction = editMenu->addAction(tr("&Paste"), this, &Editor::paste);
     pasteAction->setShortcut(QKeySequence::Paste);
     pasteAction->setEnabled(false);
 
     QMenu *viewMenu = menuBar()->addMenu(tr("&View"));
-    zoomInAction = viewMenu->addAction(tr("Zoom &In (25%)"), this, &ImageEditor::zoomIn);
+    zoomInAction = viewMenu->addAction(tr("Zoom &In (25%)"), this, &Editor::zoomIn);
     zoomInAction->setShortcut(QKeySequence::ZoomIn);
     zoomInAction->setEnabled(false);
-    zoomOutAction = viewMenu->addAction(tr("Zoom &Out (25%)"), this, &ImageEditor::zoomOut);
+    zoomOutAction = viewMenu->addAction(tr("Zoom &Out (25%)"), this, &Editor::zoomOut);
     zoomOutAction->setShortcut(QKeySequence::ZoomOut);
     zoomOutAction->setEnabled(false);
 
     QMenu *imageMenu = menuBar()->addMenu(tr("&Image"));
 }
 
-void ImageEditor::newFile()
+void Editor::newFile()
 {
-    /* Bitmap bitmap = bitmap_create(100, 100); */
-    /* QImage image(bitmap.data, bitmap.width, bitmap.height, bitmap.width * 4, QImage::Format_RGBA8888, nullptr, nullptr); */
-    /* imageWidget->image = image; */
     imageWidget->bitmap = bitmap_create(100, 100);
     imageWidget->setVisible(true);
     imageWidget->adjustSize();
@@ -85,7 +82,7 @@ void ImageEditor::newFile()
     saveAsAction->setEnabled(true);
 }
 
-void ImageEditor::open()
+void Editor::open()
 {
     QFileDialog dialog(this, tr("Open File"));
     initializeImageFileDialog(&dialog, QFileDialog::AcceptOpen);
@@ -110,55 +107,52 @@ void ImageEditor::open()
     imageWidget->initializeGL();
 }
 
-void ImageEditor::save()
+void Editor::save()
 {
 }
 
-void ImageEditor::saveAs()
+void Editor::saveAs()
 {
 }
 
-void ImageEditor::undo()
+void Editor::undo()
 {
 }
 
-void ImageEditor::redo()
+void Editor::redo()
 {
 }
 
-void ImageEditor::cut()
+void Editor::cut()
 {
 }
 
-void ImageEditor::copy()
+void Editor::copy()
 {
 }
 
-void ImageEditor::paste()
+void Editor::paste()
 {
 }
 
-void ImageEditor::zoomIn()
+void Editor::zoomIn()
 {
     imageWidget->scaleImage(1.25);
 }
 
-void ImageEditor::zoomOut()
+void Editor::zoomOut()
 {
     imageWidget->scaleImage(0.8);
 }
 
-void ImageEditor::normalSize()
+void Editor::normalSize()
 {
 }
 
-void ImageEditor::fitToWindow()
+void Editor::fitToWindow()
 {
 }
 
-ImageEditor::~ImageEditor()
+Editor::~Editor()
 {
 }
-
-// ========================================
-

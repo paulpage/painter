@@ -17,12 +17,12 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
     src/main.cpp \
-    src/ImageEditor.cpp \
+    src/Editor.cpp \
     src/ImageWidget.cpp \
     src/Bitmap.cpp
 
 HEADERS += \
-    src/ImageEditor.h \
+    src/Editor.h \
     src/ImageWidget.h \
     src/Bitmap.h
 

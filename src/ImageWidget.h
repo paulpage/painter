@@ -33,11 +33,8 @@ public:
     ImageWidget();
     ~ImageWidget();
 
-    /* void setBitmap(Bitmap *bitmap); */
     void adjustScrollBar(QScrollBar *scrollBar, double factor);
     bool loadFile(QString fileName);
-    void adjustSize();
-    void setVertexData();
     void scaleImage(double factor);
     virtual void wheelEvent(QWheelEvent *event);
     virtual void mousePressEvent(QMouseEvent *event);
@@ -46,8 +43,6 @@ public:
     virtual void paintGL();
     virtual void resizeGL(int width, int height);
 private:
-    /* QLabel *imageLabel; */ 
-    /* QOpenGLWidget *imageWidget; */
     double scaleFactor = 1;
     QPoint mousePosition;
     GLfloat offsetX = 0;
@@ -57,7 +52,6 @@ private:
     bool isLeftButtonDown = false;
     QOpenGLShaderProgram *program;
     void updateTexture();
-    /* QOpenGLBuffer vbo; */
 };
 
 #endif

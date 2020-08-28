@@ -18,11 +18,6 @@ void ImageWidget::scaleImage(double factor)
     scaleFactor *= factor;
     updateTexture();
 
-    // Resize moves the widget back to (0, 0), so restore it.
-    /* QPoint oldPosition = imageLabel->pos(); */
-    /* imageLabel->resize(scaleFactor * imageLabel->pixmap(Qt::ReturnByValue).size()); */
-    /* imageLabel->move(oldPosition); */
-
     /* adjustScrollBar(horizontalScrollBar(), factor); */
     /* adjustScrollBar(verticalScrollBar(), factor); */
 }
@@ -31,11 +26,6 @@ void ImageWidget::adjustScrollBar(QScrollBar *scrollBar, double factor)
 {
     /* scrollBar->setValue(int(factor * scrollBar->value() */
     /*                         + ((factor - 1) * scrollBar->pageStep()/2))); */
-}
-
-void ImageWidget::adjustSize()
-{
-    /* imageLabel->adjustSize(); */
 }
 
 bool ImageWidget::loadFile(QString fileName)
@@ -66,7 +56,6 @@ bool ImageWidget::loadFile(QString fileName)
     scaleFactor = 1.0;
     updateTexture();
     setVisible(true);
-    /* imageLabel->adjustSize(); */
 
     return true;
 }
@@ -79,7 +68,6 @@ void ImageWidget::wheelEvent(QWheelEvent *event)
     if (!numDegrees.isNull()) {
         scaleImage(1.0f + (numDegrees.y() / 100.0f));
     }
-    /* printf("Size: (%d, %d)\n", imageWidget->width(), imageWidget->height()); */
 
     // TODO: scroll with pixels if it's supported. Caveat: We can check numPixels for null,
     // but the value is unreliable on X11.
@@ -90,7 +78,6 @@ void ImageWidget::wheelEvent(QWheelEvent *event)
     /*     scrollWithDegrees(numSteps); */
     /* } */
 
-    /* paintGL(); */
     event->accept();
 }
 
@@ -127,41 +114,11 @@ void ImageWidget::mouseMoveEvent(QMouseEvent *event)
     event->accept();
 }
 
-void ImageWidget::setVertexData()
-{
-    /* GLfloat xRatio = (GLfloat)scaleFactor * (GLfloat)bitmap.width / (GLfloat)width(); */
-    /* GLfloat yRatio = (GLfloat)scaleFactor * (GLfloat)bitmap.height / (GLfloat)height(); */
-    /* GLfloat vertData[24] = { */
-    /*     -xRatio, -yRatio, 0, 1, */
-    /*     +xRatio, -yRatio, 1, 1, */
-    /*     +xRatio, +yRatio, 1, 0, */
-    /*     -xRatio, -yRatio, 0, 1, */
-    /*     +xRatio, +yRatio, 1, 0, */
-    /*     -xRatio, +yRatio, 0, 0, */
-    /* }; */
-    /* vbo.create(); */
-    /* vbo.bind(); */
-    /* vbo.allocate(vertData, 24 * sizeof(GLfloat)); */
-    /* update(); */
-}
-
 void ImageWidget::initializeGL()
 {
     initializeOpenGLFunctions();
 
     updateTexture();
-
-    /* GLfloat vertData[24] = { */
-    /*     -0.2f, -0.2f, 0, 1, */
-    /*     +0.2f, -0.2f, 1, 1, */
-    /*     +0.2f, +0.2f, 1, 0, */
-    /*     -0.2f, -0.2f, 0, 1, */
-    /*     +0.2f, +0.2f, 1, 0, */
-    /*     -0.2f, +0.2f, 0, 0, */
-    /* }; */
-    /* vbo.create(); */
-    /* vbo.bind(); */
-    /* vbo.allocate(vertData, 24 * sizeof(GLfloat)); */
 
     QOpenGLShader *vertShader = new QOpenGLShader(QOpenGLShader::Vertex, this);
     const char *vertSrc =
@@ -229,11 +186,6 @@ void ImageWidget::paintGL()
 
     glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
-
-    /* glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); */
-    /* glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); */
-    /* glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); */
-    /* glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); */
 
     program->enableAttributeArray(0);
     program->setAttributeBuffer(

@@ -22,13 +22,13 @@
 #include "Bitmap.h"
 #include "ImageWidget.h"
 
-class ImageEditor : public QMainWindow
+class Editor : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    ImageEditor(QWidget *parent = nullptr);
-    ~ImageEditor();
+    Editor(QWidget *parent = nullptr);
+    ~Editor();
 
 private slots:
     void newFile();
