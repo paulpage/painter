@@ -17,9 +17,8 @@ static void initializeImageFileDialog(QFileDialog *dialog, QFileDialog::AcceptMo
         mimeTypeFilters.append(mimeTypeName);
     mimeTypeFilters.sort();
     dialog->setMimeTypeFilters(mimeTypeFilters);
-    dialog->selectMimeTypeFilter("image/jpeg");
     if (mode == QFileDialog::AcceptSave)
-        dialog->setDefaultSuffix("jpg");
+        dialog->setDefaultSuffix("png");
 }
 
 Editor::Editor(QWidget *parent)
@@ -100,8 +99,7 @@ void Editor::open()
     saveAction->setEnabled(true);
     saveAsAction->setEnabled(true);
 
-    QString message = tr("Opened \"%1\", %2x%3, Depth: %4")
-        .arg(QDir::toNativeSeparators(fileName)).arg(imageWidget->image.width()).arg(imageWidget->image.height()).arg(imageWidget->image.depth());
+    QString message = tr("Opened \"%1\"").arg(QDir::toNativeSeparators(fileName));
     statusBar()->showMessage(message);
     /* re-init to change texture, TODO change this */
     imageWidget->initializeGL();
@@ -109,6 +107,34 @@ void Editor::open()
 
 void Editor::save()
 {
+    QFileDialog dialog(this, tr("Save File"));
+    initializeImageFileDialog(&dialog, QFileDialog::AcceptSave);
+    QString fileName;
+    if (dialog.exec() == QDialog::Accepted) {
+        fileName = dialog.selectedFiles().first();
+        bool write = true;
+        QFile file(fileName);
+        if (file.exists()) {
+            QMessageBox confirmation;
+            QString message = QString(tr("Are you sure you want to overwrite %1?")).arg(fileName);
+            confirmation.setText(message);
+            confirmation.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+            confirmation.setDefaultButton(QMessageBox::No);
+            confirmation.setIcon(QMessageBox::Warning);
+            write = (confirmation.exec() == QMessageBox::Yes);
+        }
+        if (write) {
+            QImage image(
+                    imageWidget->bitmap.data,
+                    imageWidget->bitmap.width,
+                    imageWidget->bitmap.height,
+                    imageWidget->bitmap.width * 4,
+                    QImage::Format_RGBA8888,
+                    nullptr,
+                    nullptr);
+            image.save(fileName);
+        }
+    }
 }
 
 void Editor::saveAs()

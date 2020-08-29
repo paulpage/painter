@@ -32,7 +32,7 @@ bool ImageWidget::loadFile(QString fileName)
 {
     QImageReader reader(fileName);
     reader.setAutoTransform(true);
-    image = reader.read();
+    QImage image = reader.read();
     if (image.isNull()) {
         QMessageBox::information(this, QGuiApplication::applicationDisplayName(),
                                  tr("Can't load %1: %2")

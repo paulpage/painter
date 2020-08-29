@@ -27,7 +27,6 @@ class ImageWidget : public QOpenGLWidget, protected QOpenGLFunctions
 public:
     using QOpenGLWidget::QOpenGLWidget;
 
-    QImage image;
     Bitmap bitmap;
 
     ImageWidget();
