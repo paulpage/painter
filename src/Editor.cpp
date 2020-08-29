@@ -16,6 +16,7 @@ static void initializeImageFileDialog(QFileDialog *dialog, QFileDialog::AcceptMo
     for (QByteArray &mimeTypeName : supportedMimeTypes)
         mimeTypeFilters.append(mimeTypeName);
     mimeTypeFilters.sort();
+    mimeTypeFilters.prepend("application/octet-stream");
     dialog->setMimeTypeFilters(mimeTypeFilters);
     if (mode == QFileDialog::AcceptSave)
         dialog->setDefaultSuffix("png");
@@ -91,18 +92,14 @@ void Editor::open()
         fileName = dialog.selectedFiles().first();
         if (imageWidget->loadFile(fileName)) {
             setWindowFilePath(fileName);
+            zoomInAction->setEnabled(true);
+            zoomOutAction->setEnabled(true);
+            saveAction->setEnabled(true);
+            saveAsAction->setEnabled(true);
+            QString message = tr("Opened \"%1\"").arg(QDir::toNativeSeparators(fileName));
+            statusBar()->showMessage(message);
         }
     }
-
-    zoomInAction->setEnabled(true);
-    zoomOutAction->setEnabled(true);
-    saveAction->setEnabled(true);
-    saveAsAction->setEnabled(true);
-
-    QString message = tr("Opened \"%1\"").arg(QDir::toNativeSeparators(fileName));
-    statusBar()->showMessage(message);
-    /* re-init to change texture, TODO change this */
-    imageWidget->initializeGL();
 }
 
 void Editor::save()
