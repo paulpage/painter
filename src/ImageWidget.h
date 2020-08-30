@@ -32,6 +32,7 @@ public:
     ImageWidget();
     ~ImageWidget();
 
+    QPoint globalToBitmap(QPoint g);
     void adjustScrollBar(QScrollBar *scrollBar, double factor);
     bool loadFile(QString fileName);
     void scaleImage(double factor);
@@ -44,8 +45,9 @@ public:
 private:
     double scaleFactor = 1;
     QPoint mousePosition;
-    GLfloat offsetX = 0;
-    GLfloat offsetY = 0;
+    QPoint lastMousePosition;
+    int offsetX = 0;
+    int offsetY = 0;
     QOpenGLTexture *texture;
     bool isMiddleButtonDown = false;
     bool isLeftButtonDown = false;

@@ -18,7 +18,7 @@ void bitmap_free(Bitmap *bitmap) {
     free(bitmap->data);
 }
 
-bool bitmap_set_pixel(Bitmap *bitmap, int x, int y, Color c)
+bool bitmap_draw_pixel(Bitmap *bitmap, int x, int y, Color c)
 {
     int w = bitmap->width;
     int h = bitmap->height;
@@ -30,4 +30,24 @@ bool bitmap_set_pixel(Bitmap *bitmap, int x, int y, Color c)
         return true;
     }
     return false;
+}
+
+void bitmap_draw_line(Bitmap *bitmap, int x1, int y1, int x2, int y2, Color c)
+{
+    bitmap_draw_pixel(bitmap, x1, y1, c);
+    bitmap_draw_pixel(bitmap, x2, y2, c);
+    int width = abs(x2 - x1);
+    int height = abs(y2 - y1);
+    int step = width > height ? width : height;
+    if (step != 0) {
+        double dx = ((double)x2 - (double)x1) / (double)step;
+        double dy = ((double)y2 - (double)y1) / (double)step;
+        for (int i = 0; i < step; i++) {
+            bitmap_draw_pixel(
+                    bitmap,
+                    (int)((double)x1 + dx * (double)i),
+                    (int)((double)y1 + dy * (double)i),
+                    c);
+        }
+    }
 }

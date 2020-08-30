@@ -12,6 +12,21 @@ ImageWidget::ImageWidget()
     
 }
 
+QPoint ImageWidget::globalToBitmap(QPoint g) 
+{
+    QPoint base = g - mapToGlobal(QPoint(0, 0));
+    double bitmapWidth = scaleFactor * (double)bitmap.width;
+    double bitmapStartX = (double)width() / 2 - bitmapWidth / 2 + offsetX;
+    double screenDistanceX = (double)base.x() - bitmapStartX;
+    int bx = (int)(screenDistanceX / scaleFactor);
+
+    double bitmapHeight = scaleFactor * (double)bitmap.height;
+    double bitmapStartY = (double)height() / 2 - bitmapWidth / 2 + offsetY;
+    double screenDistanceY = (double)base.y() - bitmapStartY;
+    int by = (int)(screenDistanceY / scaleFactor);
+
+    return QPoint(bx, by);
+}
 
 void ImageWidget::scaleImage(double factor)
 {
@@ -49,7 +64,7 @@ bool ImageWidget::loadFile(QString fileName)
                 (unsigned char)qBlue(c),
                 (unsigned char)qAlpha(c),
             };
-            bitmap_set_pixel(&bitmap, x, y, color);
+            /* bitmap_set_pixel(&bitmap, x, y, color); */
         }
     }
 
@@ -86,6 +101,7 @@ void ImageWidget::mousePressEvent(QMouseEvent *event) {
     // state during mouse move because the mouse move event (on my system)
     // is not sent when there are no buttons down.
     QOpenGLWidget::mousePressEvent(event);
+    lastMousePosition = event->globalPos();
     mousePosition = event->globalPos();
     isMiddleButtonDown = ((event->button() & Qt::MidButton) == Qt::MidButton);
     isLeftButtonDown = ((event->button() & Qt::LeftButton) == Qt::LeftButton);
@@ -99,17 +115,29 @@ void ImageWidget::mouseMoveEvent(QMouseEvent *event)
 
     if (isMiddleButtonDown) {
         QPoint diff = event->globalPos() - mousePosition;
-        offsetX += (GLfloat)diff.x() * 2 / (GLfloat)width();
-        offsetY += (GLfloat)diff.y() * 2 / (GLfloat)height();
+        offsetX += diff.x();
+        offsetY += diff.y();
+        /* offsetX += (GLfloat)diff.x() * 2 / (GLfloat)width(); */
+        /* offsetY += (GLfloat)diff.y() * 2 / (GLfloat)height(); */
         /* imageLabel->move(imageLabel->pos() + diff); */
     }
     if (isLeftButtonDown) {
-        int limit = qMin(width(), height());
-        for (int i = 0; i < limit; i++) {
-            bitmap_set_pixel(&bitmap, i, i, Color { 255, 0, 0, 255 });
-        }
+        QPoint lastPixelPosition = globalToBitmap(lastMousePosition);
+        QPoint pixelPosition = globalToBitmap(mousePosition);
+        QString debug = QString("Mouse: (%1, %2), Screen: (%3, %4)").arg(mousePosition.x()).arg(mousePosition.y()).arg(pixelPosition.x()).arg(pixelPosition.y());
+        std::cout << debug.toUtf8().constData() << std::endl;
+        bitmap_draw_line(
+                &bitmap,
+                lastPixelPosition.x(),
+                lastPixelPosition.y(),
+                pixelPosition.x(),
+                pixelPosition.y(),
+                Color { 255, 0, 0, 255 });
+        updateTexture();
+        update();
     }
 
+    lastMousePosition = mousePosition;
     mousePosition = event->globalPos();
     event->accept();
 }
@@ -172,13 +200,15 @@ void ImageWidget::paintGL()
     QOpenGLBuffer vbo;
     GLfloat xRatio = (GLfloat)scaleFactor * (GLfloat)bitmap.width / (GLfloat)width();
     GLfloat yRatio = (GLfloat)scaleFactor * (GLfloat)bitmap.height / (GLfloat)height();
+    GLfloat scaledOffsetX = (GLfloat)offsetX * 2 / (GLfloat)width();
+    GLfloat scaledOffsetY = (GLfloat)offsetY * 2 / (GLfloat)height();
     GLfloat vertData[24] = {
-        -xRatio + offsetX, -yRatio - offsetY, 0, 1,
-        +xRatio + offsetX, -yRatio - offsetY, 1, 1,
-        +xRatio + offsetX, +yRatio - offsetY, 1, 0,
-        -xRatio + offsetX, -yRatio - offsetY, 0, 1,
-        +xRatio + offsetX, +yRatio - offsetY, 1, 0,
-        -xRatio + offsetX, +yRatio - offsetY, 0, 0,
+        -xRatio + scaledOffsetX, -yRatio - scaledOffsetY, 0, 1,
+        +xRatio + scaledOffsetX, -yRatio - scaledOffsetY, 1, 1,
+        +xRatio + scaledOffsetX, +yRatio - scaledOffsetY, 1, 0,
+        -xRatio + scaledOffsetX, -yRatio - scaledOffsetY, 0, 1,
+        +xRatio + scaledOffsetX, +yRatio - scaledOffsetY, 1, 0,
+        -xRatio + scaledOffsetX, +yRatio - scaledOffsetY, 0, 0,
     };
     vbo.create();
     vbo.bind();
