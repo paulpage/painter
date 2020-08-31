@@ -1,5 +1,7 @@
 #include "Editor.h"
 
+Q_DECLARE_METATYPE(QDockWidget::DockWidgetFeatures)
+
 static void initializeImageFileDialog(QFileDialog *dialog, QFileDialog::AcceptMode mode)
 {
     static bool firstDialog = true;
@@ -22,10 +24,25 @@ static void initializeImageFileDialog(QFileDialog *dialog, QFileDialog::AcceptMo
         dialog->setDefaultSuffix("png");
 }
 
-Editor::Editor(QWidget *parent)
-    : QMainWindow(parent), imageWidget(new ImageWidget)
+Editor::Editor() : imageWidget(new ImageWidget)
 {
+    qRegisterMetaType<QDockWidget::DockWidgetFeatures>();
+
+    QDockWidget *leftDock = new QDockWidget;
+    QWidget *leftContent = new QWidget;
+    QVBoxLayout *leftLayout = new QVBoxLayout(leftContent);
+    leftLayout->addWidget(new QPushButton("Left 1"));
+    leftLayout->addWidget(new QPushButton("Left 2"));
+    leftLayout->addWidget(new QPushButton("Left 3"));
+    leftLayout->addWidget(new QPushButton("Left 4"));
+    leftLayout->setAlignment(Qt::AlignTop);
+    leftDock->setWidget(leftContent);
+
+    QDockWidget *rightDock = new QDockWidget();
+    rightDock->setWidget(new QPushButton("Right"));
     setCentralWidget(imageWidget);
+    addDockWidget(Qt::LeftDockWidgetArea, leftDock);
+    addDockWidget(Qt::RightDockWidgetArea, rightDock);
 
     QMenu *fileMenu = menuBar()->addMenu(tr("&File"));
     newAction = fileMenu->addAction(tr("&New"), this, &Editor::newFile);

@@ -1,33 +1,36 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <QAction>
-#include <QImage>
-#include <QLabel>
-#include <QMainWindow>
-#include <QScrollArea>
-#include <QPalette>
-#include <QSizePolicy>
-#include <QMenuBar>
-#include <QKeySequence>
-#include <QScrollBar>
-#include <QFileDialog>
-#include <QStandardPaths>
-#include <QImageReader>
-#include <QImageWriter>
-#include <QMessageBox>
-#include <QGuiApplication>
-#include <QStatusBar>
-
 #include "Bitmap.h"
 #include "ImageWidget.h"
+#include <QAction>
+#include <QDockWidget>
+#include <QFileDialog>
+#include <QGuiApplication>
+#include <QHBoxLayout>
+#include <QImage>
+#include <QImageReader>
+#include <QImageWriter>
+#include <QKeySequence>
+#include <QLabel>
+#include <QLayout>
+#include <QMainWindow>
+#include <QMenuBar>
+#include <QMessageBox>
+#include <QPalette>
+#include <QPushButton>
+#include <QScrollArea>
+#include <QScrollBar>
+#include <QSizePolicy>
+#include <QStandardPaths>
+#include <QStatusBar>
 
 class Editor : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    Editor(QWidget *parent = nullptr);
+    Editor(/*QWidget *parent = nullptr*/);
     ~Editor();
 
 private slots:

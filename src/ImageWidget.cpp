@@ -1,6 +1,4 @@
 #include "ImageWidget.h"
-#include <chrono>
-#include <iostream>
 
 ImageWidget::ImageWidget()
 {
@@ -8,8 +6,6 @@ ImageWidget::ImageWidget()
     QImage image(bitmap.data, bitmap.width, bitmap.height, bitmap.width * 4, QImage::Format_RGBA8888, nullptr, nullptr);
     texture = new QOpenGLTexture(image);
     setBackgroundRole(QPalette::Dark);
-    setVisible(false);
-    
 }
 
 QPoint ImageWidget::globalToBitmap(QPoint g) 
@@ -124,8 +120,6 @@ void ImageWidget::mouseMoveEvent(QMouseEvent *event)
     if (isLeftButtonDown) {
         QPoint lastPixelPosition = globalToBitmap(lastMousePosition);
         QPoint pixelPosition = globalToBitmap(mousePosition);
-        QString debug = QString("Mouse: (%1, %2), Screen: (%3, %4)").arg(mousePosition.x()).arg(mousePosition.y()).arg(pixelPosition.x()).arg(pixelPosition.y());
-        std::cout << debug.toUtf8().constData() << std::endl;
         bitmap_draw_line(
                 &bitmap,
                 lastPixelPosition.x(),
