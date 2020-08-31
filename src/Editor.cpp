@@ -30,12 +30,33 @@ Editor::Editor() : imageWidget(new ImageWidget)
 
     QDockWidget *leftDock = new QDockWidget;
     QWidget *leftContent = new QWidget;
+
+    QPushButton *buttons[] = {
+        new QPushButton("Pencil"),
+        new QPushButton("Paintbrush"),
+        new QPushButton("Color Picker"),
+        new QPushButton("Paint Bucket"),
+        new QPushButton("Spray Can"),
+    };
+    QWidget *toolWidget = new QFrame;
+    QVBoxLayout *toolLayout = new QVBoxLayout(toolWidget);
+    toolGroup = new QButtonGroup;
+    toolGroup->setExclusive(true);
+    toolGroup->addButton(buttons[0], PENCIL);
+    toolGroup->addButton(buttons[1], PAINTBRUSH);
+    toolGroup->addButton(buttons[2], COLOR_PICKER);
+    toolGroup->addButton(buttons[3], PAINT_BUCKET);
+    toolGroup->addButton(buttons[4], SPRAY_CAN);
+    toolLayout->addWidget(buttons[0]);
+    toolLayout->addWidget(buttons[1]);
+    toolLayout->addWidget(buttons[2]);
+    toolLayout->addWidget(buttons[3]);
+    toolLayout->addWidget(buttons[4]);
+
     QVBoxLayout *leftLayout = new QVBoxLayout(leftContent);
-    leftLayout->addWidget(new QPushButton("Left 1"));
-    leftLayout->addWidget(new QPushButton("Left 2"));
-    leftLayout->addWidget(new QPushButton("Left 3"));
-    leftLayout->addWidget(new QPushButton("Left 4"));
+    leftLayout->addWidget(toolWidget);
     leftLayout->setAlignment(Qt::AlignTop);
+
     leftDock->setWidget(leftContent);
 
     QDockWidget *rightDock = new QDockWidget();

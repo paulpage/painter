@@ -4,8 +4,10 @@
 #include "Bitmap.h"
 #include "ImageWidget.h"
 #include <QAction>
+#include <QButtonGroup>
 #include <QDockWidget>
 #include <QFileDialog>
+#include <QGroupBox>
 #include <QGuiApplication>
 #include <QHBoxLayout>
 #include <QImage>
@@ -24,6 +26,14 @@
 #include <QSizePolicy>
 #include <QStandardPaths>
 #include <QStatusBar>
+
+enum Tool {
+    PENCIL,
+    PAINTBRUSH,
+    COLOR_PICKER,
+    PAINT_BUCKET,
+    SPRAY_CAN,
+};
 
 class Editor : public QMainWindow
 {
@@ -51,6 +61,8 @@ private slots:
 private:
 
     ImageWidget *imageWidget;
+    QButtonGroup *toolGroup;
+    Tool activeTool = PENCIL;
 
     QAction *newAction;
     QAction *openAction;
