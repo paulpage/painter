@@ -21,6 +21,7 @@
 #include <QColor>
 
 #include "Bitmap.h"
+#include "common.h"
 
 class ImageWidget : public QOpenGLWidget, protected QOpenGLFunctions
 {
@@ -28,6 +29,8 @@ public:
     using QOpenGLWidget::QOpenGLWidget;
 
     Bitmap bitmap;
+    Tool activeTool = TOOL_PENCIL;
+    Color activeColor = {255, 0, 0, 255};
 
     ImageWidget();
     ~ImageWidget();

@@ -1,8 +1,6 @@
 #ifndef BITMAP_H
 #define BITMAP_H
 
-#include <cstdlib>
-
 struct Color {
     unsigned char r;
     unsigned char g;
@@ -19,7 +17,11 @@ struct Bitmap {
 
 Bitmap bitmap_create(int width, int height);
 void bitmap_free(Bitmap *bitmap);
+Color bitmap_get_pixel(Bitmap *bitmap, int x, int y);
 bool bitmap_draw_pixel(Bitmap *bitmap, int x, int y, Color color);
 void bitmap_draw_line(Bitmap *bitmap, int x1, int y1, int x2, int y2, Color color);
+void bitmap_fill(Bitmap *bitmap, int x, int y, Color color);
+
+bool color_eq(Color c1, Color c2);
 
 #endif // BITMAP_H

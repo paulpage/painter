@@ -120,13 +120,50 @@ void ImageWidget::mouseMoveEvent(QMouseEvent *event)
     if (isLeftButtonDown) {
         QPoint lastPixelPosition = globalToBitmap(lastMousePosition);
         QPoint pixelPosition = globalToBitmap(mousePosition);
+        switch (activeTool) {
+            case TOOL_PENCIL:
+                bitmap_draw_line(
+                        &bitmap,
+                        lastPixelPosition.x(),
+                        lastPixelPosition.y(),
+                        pixelPosition.x(),
+                        pixelPosition.y(),
+                        activeColor);
+                break;
+            case TOOL_PAINTBRUSH:
+                for (int y = -2; y < 3; y++) {
+                    for (int x = -2; x < 3; x++) {
+                        bitmap_draw_line(
+                                &bitmap,
+                                lastPixelPosition.x() + x,
+                                lastPixelPosition.y() + y,
+                                pixelPosition.x() + x,
+                                pixelPosition.y() + y,
+                                activeColor);
+                    }
+                }
+                break;
+            case TOOL_COLOR_PICKER:
+                break;
+            case TOOL_PAINT_BUCKET:
+                        bitmap_fill(
+                                &bitmap,
+                                pixelPosition.x(),
+                                pixelPosition.y(),
+                                activeColor);
+                break;
+            case TOOL_SPRAY_CAN:
+                break;
+            default:
+                break;
+        }
         bitmap_draw_line(
                 &bitmap,
                 lastPixelPosition.x(),
                 lastPixelPosition.y(),
                 pixelPosition.x(),
                 pixelPosition.y(),
-                Color { 255, 0, 0, 255 });
+                activeColor);
         updateTexture();
         update();
     }

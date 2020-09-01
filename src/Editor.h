@@ -3,6 +3,7 @@
 
 #include "Bitmap.h"
 #include "ImageWidget.h"
+#include <QAbstractButton>
 #include <QAction>
 #include <QButtonGroup>
 #include <QDockWidget>
@@ -26,14 +27,6 @@
 #include <QSizePolicy>
 #include <QStandardPaths>
 #include <QStatusBar>
-
-enum Tool {
-    PENCIL,
-    PAINTBRUSH,
-    COLOR_PICKER,
-    PAINT_BUCKET,
-    SPRAY_CAN,
-};
 
 class Editor : public QMainWindow
 {
@@ -62,7 +55,10 @@ private:
 
     ImageWidget *imageWidget;
     QButtonGroup *toolGroup;
-    Tool activeTool = PENCIL;
+    QButtonGroup *colorGroup;
+
+    void toolButtonClicked(QAbstractButton *button);
+    void colorButtonClicked(QAbstractButton *button);
 
     QAction *newAction;
     QAction *openAction;

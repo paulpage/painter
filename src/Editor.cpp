@@ -1,3 +1,4 @@
+#include "common.h"
 #include "Editor.h"
 
 Q_DECLARE_METATYPE(QDockWidget::DockWidgetFeatures)
@@ -28,43 +29,63 @@ Editor::Editor() : imageWidget(new ImageWidget)
 {
     qRegisterMetaType<QDockWidget::DockWidgetFeatures>();
 
+    // Tools
     QDockWidget *leftDock = new QDockWidget;
     QWidget *leftContent = new QWidget;
-
-    QPushButton *buttons[] = {
+    QWidget *toolWidget = new QFrame;
+    QVBoxLayout *toolLayout = new QVBoxLayout(toolWidget);
+    toolGroup = new QButtonGroup;
+    toolGroup->setExclusive(true);
+    QPushButton *toolButtons[5] = {
         new QPushButton("Pencil"),
         new QPushButton("Paintbrush"),
         new QPushButton("Color Picker"),
         new QPushButton("Paint Bucket"),
         new QPushButton("Spray Can"),
     };
-    QWidget *toolWidget = new QFrame;
-    QVBoxLayout *toolLayout = new QVBoxLayout(toolWidget);
-    toolGroup = new QButtonGroup;
-    toolGroup->setExclusive(true);
-    toolGroup->addButton(buttons[0], PENCIL);
-    toolGroup->addButton(buttons[1], PAINTBRUSH);
-    toolGroup->addButton(buttons[2], COLOR_PICKER);
-    toolGroup->addButton(buttons[3], PAINT_BUCKET);
-    toolGroup->addButton(buttons[4], SPRAY_CAN);
-    toolLayout->addWidget(buttons[0]);
-    toolLayout->addWidget(buttons[1]);
-    toolLayout->addWidget(buttons[2]);
-    toolLayout->addWidget(buttons[3]);
-    toolLayout->addWidget(buttons[4]);
-
+    for (int i = 0; i < FINAL_TOOL_COUNT; i++) {
+        toolLayout->addWidget(toolButtons[i]);
+        toolGroup->addButton(toolButtons[i], i);
+        toolButtons[i]->setCheckable(true);
+    }
+    toolButtons[0]->setChecked(true);
+    connect(toolGroup, QOverload<QAbstractButton *>::of(&QButtonGroup::buttonClicked), this, &Editor::toolButtonClicked);
     QVBoxLayout *leftLayout = new QVBoxLayout(leftContent);
     leftLayout->addWidget(toolWidget);
     leftLayout->setAlignment(Qt::AlignTop);
-
     leftDock->setWidget(leftContent);
 
-    QDockWidget *rightDock = new QDockWidget();
-    rightDock->setWidget(new QPushButton("Right"));
+    // Colors
+    QDockWidget *rightDock = new QDockWidget;
+    QWidget *rightContent = new QWidget;
+    QWidget *colorWidget = new QFrame;
+    QVBoxLayout *colorLayout = new QVBoxLayout(colorWidget);
+    colorGroup = new QButtonGroup;
+    colorGroup->setExclusive(true);
+    QPushButton *colorButtons[5] = {
+        new QPushButton("Red"),
+        new QPushButton("Green"),
+        new QPushButton("Blue"),
+        new QPushButton("Black"),
+        new QPushButton("White"),
+    };
+    for (int i = 0; i < 5; i++) {
+        colorLayout->addWidget(colorButtons[i]);
+        colorGroup->addButton(colorButtons[i], i);
+        colorButtons[i]->setCheckable(true);
+    }
+    colorButtons[0]->setChecked(true);
+    connect(colorGroup, QOverload<QAbstractButton *>::of(&QButtonGroup::buttonClicked), this, &Editor::colorButtonClicked);
+    QVBoxLayout *rightLayout = new QVBoxLayout(rightContent);
+    rightLayout->addWidget(colorWidget);
+    rightLayout->setAlignment(Qt::AlignTop);
+    rightDock->setWidget(rightContent);
+    
     setCentralWidget(imageWidget);
     addDockWidget(Qt::LeftDockWidgetArea, leftDock);
     addDockWidget(Qt::RightDockWidgetArea, rightDock);
 
+    // Menu Bar
     QMenu *fileMenu = menuBar()->addMenu(tr("&File"));
     newAction = fileMenu->addAction(tr("&New"), this, &Editor::newFile);
     newAction->setShortcut(QKeySequence::New);
@@ -106,6 +127,37 @@ Editor::Editor() : imageWidget(new ImageWidget)
     zoomOutAction->setEnabled(false);
 
     QMenu *imageMenu = menuBar()->addMenu(tr("&Image"));
+}
+
+void Editor::toolButtonClicked(QAbstractButton *button)
+{
+    imageWidget->activeTool = (Tool)toolGroup->id(button);
+    button->setChecked(true);
+}
+
+void Editor::colorButtonClicked(QAbstractButton *button)
+{
+    Color color = {0, 0, 0, 0};
+    switch (colorGroup->id(button)) {
+        case 0:
+            color = {255, 0, 0, 255};
+            break;
+        case 1:
+            color = {0, 255, 0, 255};
+            break;
+        case 2:
+            color = {0, 0, 255, 255};
+            break;
+        case 3:
+            color = {0, 0, 0, 255};
+            break;
+        case 4:
+            color = {255, 255, 255, 255};
+            break;
+    }
+    printf("Set color to (%d %d %d %d)\n", color.r, color.g, color.b, color.a);
+    imageWidget->activeColor = color;
+    button->setChecked(true);
 }
 
 void Editor::newFile()
