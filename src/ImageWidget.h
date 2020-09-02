@@ -1,51 +1,63 @@
 #ifndef IMAGEWIDGET_H
 #define IMAGEWIDGET_H
 
-#include <QScrollArea>
-#include <QList>
-#include <QString>
-#include <QScrollBar>
-#include <QOpenGLWidget>
-#include <QOpenGLFunctions>
-#include <QOpenGLTexture>
-#include <QOpenGLShader>
-#include <QOpenGLBuffer>
-#include <QImageReader>
-#include <QMessageBox>
-#include <QGuiApplication>
-#include <QDir>
-#include <QWheelEvent>
-#include <QMouseEvent>
-#include <QResizeEvent>
-#include <QExposeEvent>
 #include <QColor>
+#include <QDir>
+#include <QExposeEvent>
+#include <QGuiApplication>
+#include <QImageReader>
+#include <QList>
+#include <QMessageBox>
+#include <QMouseEvent>
+#include <QOpenGLBuffer>
+#include <QOpenGLFunctions>
+#include <QOpenGLShader>
+#include <QOpenGLTexture>
+#include <QOpenGLWidget>
+#include <QResizeEvent>
+#include <QScrollArea>
+#include <QScrollBar>
+#include <QString>
+#include <QTimer>
+#include <QWheelEvent>
 
 #include "Bitmap.h"
 #include "common.h"
 
+QT_FORWARD_DECLARE_CLASS(QOpenGLShaderProgram);
+QT_FORWARD_DECLARE_CLASS(QOpenGLTexture)
+
 class ImageWidget : public QOpenGLWidget, protected QOpenGLFunctions
 {
+    Q_OBJECT
+
 public:
     using QOpenGLWidget::QOpenGLWidget;
 
-    Bitmap bitmap;
-    Tool activeTool = TOOL_PENCIL;
-    Color activeColor = {255, 0, 0, 255};
-
-    ImageWidget();
+    ImageWidget(QWidget *parent);
     ~ImageWidget();
 
     QPoint globalToBitmap(QPoint g);
     void adjustScrollBar(QScrollBar *scrollBar, double factor);
     bool loadFile(QString fileName);
     void scaleImage(double factor);
-    virtual void wheelEvent(QWheelEvent *event);
-    virtual void mousePressEvent(QMouseEvent *event);
-    virtual void mouseMoveEvent(QMouseEvent *event);
-    virtual void initializeGL();
-    virtual void paintGL();
-    virtual void resizeGL(int width, int height);
+    void wheelEvent(QWheelEvent *event) override;
+    void mousePressEvent(QMouseEvent *event) override;
+    void mouseReleaseEvent(QMouseEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
+    void initializeGL() override;
+    void paintGL() override;
+    void resizeGL(int width, int height) override;
+
+    Bitmap bitmap;
+    Tool activeTool = TOOL_PENCIL;
+    Color activeColor = {255, 0, 0, 255};
+
+signals:
+    void sendColorChanged(Color color);
+
 private:
+    QTimer *timer;
     double scaleFactor = 1;
     QPoint mousePosition;
     QPoint lastMousePosition;
@@ -55,7 +67,10 @@ private:
     bool isMiddleButtonDown = false;
     bool isLeftButtonDown = false;
     QOpenGLShaderProgram *program;
+
+    void useSprayCan();
     void updateTexture();
+    void applyTools();
 };
 
 #endif

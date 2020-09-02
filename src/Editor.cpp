@@ -25,9 +25,11 @@ static void initializeImageFileDialog(QFileDialog *dialog, QFileDialog::AcceptMo
         dialog->setDefaultSuffix("png");
 }
 
-Editor::Editor() : imageWidget(new ImageWidget)
+Editor::Editor()
 {
     qRegisterMetaType<QDockWidget::DockWidgetFeatures>();
+
+    imageWidget = new ImageWidget(this);
 
     // Tools
     QDockWidget *leftDock = new QDockWidget;
@@ -137,27 +139,32 @@ void Editor::toolButtonClicked(QAbstractButton *button)
 
 void Editor::colorButtonClicked(QAbstractButton *button)
 {
-    Color color = {0, 0, 0, 0};
-    switch (colorGroup->id(button)) {
-        case 0:
-            color = {255, 0, 0, 255};
-            break;
-        case 1:
-            color = {0, 255, 0, 255};
-            break;
-        case 2:
-            color = {0, 0, 255, 255};
-            break;
-        case 3:
-            color = {0, 0, 0, 255};
-            break;
-        case 4:
-            color = {255, 255, 255, 255};
-            break;
+    int c = colorGroup->id(button);
+    if (c >= 0 && c < 5) {
+        imageWidget->activeColor = pallette[c];
+        button->setChecked(true);
     }
-    printf("Set color to (%d %d %d %d)\n", color.r, color.g, color.b, color.a);
-    imageWidget->activeColor = color;
-    button->setChecked(true);
+    /* Color color = {0, 0, 0, 0}; */
+    /* switch (colorGroup->id(button)) { */
+    /*     case 0: */
+    /*         color = {255, 0, 0, 255}; */
+    /*         break; */
+    /*     case 1: */
+    /*         color = {0, 255, 0, 255}; */
+    /*         break; */
+    /*     case 2: */
+    /*         color = {0, 0, 255, 255}; */
+    /*         break; */
+    /*     case 3: */
+    /*         color = {0, 0, 0, 255}; */
+    /*         break; */
+    /*     case 4: */
+    /*         color = {255, 255, 255, 255}; */
+    /*         break; */
+    /* } */
+    /* printf("Set color to (%d %d %d %d)\n", color.r, color.g, color.b, color.a); */
+    /* imageWidget->activeColor = color; */
+    /* button->setChecked(true); */
 }
 
 void Editor::newFile()
@@ -264,6 +271,16 @@ void Editor::normalSize()
 
 void Editor::fitToWindow()
 {
+}
+
+void Editor::setActiveColor(Color color)
+{
+    for (int i = 0; i < 5; i++) {
+        if (color_eq(pallette[i], color)) {
+            imageWidget->activeColor = pallette[i];
+            colorGroup->button(i)->setChecked(true);
+        }
+    }
 }
 
 Editor::~Editor()

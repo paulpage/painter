@@ -33,7 +33,7 @@ class Editor : public QMainWindow
     Q_OBJECT
 
 public:
-    Editor(/*QWidget *parent = nullptr*/);
+    Editor();
     ~Editor();
 
 private slots:
@@ -51,11 +51,20 @@ private slots:
     void normalSize();
     void fitToWindow();
 
+    void setActiveColor(Color color);
+
 private:
 
     ImageWidget *imageWidget;
     QButtonGroup *toolGroup;
     QButtonGroup *colorGroup;
+    Color pallette[5] = {
+        {255, 0, 0, 255},
+        {0, 255, 0, 255},
+        {0, 0, 255, 255},
+        {0, 0, 0, 255},
+        {255, 255, 255, 255},
+    };
 
     void toolButtonClicked(QAbstractButton *button);
     void colorButtonClicked(QAbstractButton *button);

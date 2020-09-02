@@ -1,14 +1,21 @@
+#include <QRandomGenerator>
+#include <math.h>
+
 #include "ImageWidget.h"
 
-ImageWidget::ImageWidget()
+ImageWidget::ImageWidget(QWidget *parent)
 {
     bitmap = bitmap_create(100, 100);
     QImage image(bitmap.data, bitmap.width, bitmap.height, bitmap.width * 4, QImage::Format_RGBA8888, nullptr, nullptr);
     texture = new QOpenGLTexture(image);
     setBackgroundRole(QPalette::Dark);
+    timer = new QTimer(this);
+    timer->setInterval(20);
+    connect(timer, &QTimer::timeout, this, QOverload<>::of(&ImageWidget::useSprayCan));
+    connect(this, SIGNAL(sendColorChanged(Color)), parent, SLOT(setActiveColor(Color)));
 }
 
-QPoint ImageWidget::globalToBitmap(QPoint g) 
+QPoint ImageWidget::globalToBitmap(QPoint g)
 {
     QPoint base = g - mapToGlobal(QPoint(0, 0));
     double bitmapWidth = scaleFactor * (double)bitmap.width;
@@ -101,8 +108,19 @@ void ImageWidget::mousePressEvent(QMouseEvent *event) {
     mousePosition = event->globalPos();
     isMiddleButtonDown = ((event->button() & Qt::MidButton) == Qt::MidButton);
     isLeftButtonDown = ((event->button() & Qt::LeftButton) == Qt::LeftButton);
+
+    applyTools();
+
     updateTexture();
     event->accept();
+}
+
+void ImageWidget::mouseReleaseEvent(QMouseEvent *event) {
+    isMiddleButtonDown = !((event->button() & Qt::MidButton) == Qt::MidButton);
+    isLeftButtonDown = !((event->button() & Qt::LeftButton) == Qt::LeftButton);
+    if (!isLeftButtonDown) {
+        timer->stop();
+    }
 }
 
 void ImageWidget::mouseMoveEvent(QMouseEvent *event)
@@ -117,56 +135,8 @@ void ImageWidget::mouseMoveEvent(QMouseEvent *event)
         /* offsetY += (GLfloat)diff.y() * 2 / (GLfloat)height(); */
         /* imageLabel->move(imageLabel->pos() + diff); */
     }
-    if (isLeftButtonDown) {
-        QPoint lastPixelPosition = globalToBitmap(lastMousePosition);
-        QPoint pixelPosition = globalToBitmap(mousePosition);
-        switch (activeTool) {
-            case TOOL_PENCIL:
-                bitmap_draw_line(
-                        &bitmap,
-                        lastPixelPosition.x(),
-                        lastPixelPosition.y(),
-                        pixelPosition.x(),
-                        pixelPosition.y(),
-                        activeColor);
-                break;
-            case TOOL_PAINTBRUSH:
-                for (int y = -2; y < 3; y++) {
-                    for (int x = -2; x < 3; x++) {
-                        bitmap_draw_line(
-                                &bitmap,
-                                lastPixelPosition.x() + x,
-                                lastPixelPosition.y() + y,
-                                pixelPosition.x() + x,
-                                pixelPosition.y() + y,
-                                activeColor);
-                    }
-                }
-                break;
-            case TOOL_COLOR_PICKER:
-                break;
-            case TOOL_PAINT_BUCKET:
-                        bitmap_fill(
-                                &bitmap,
-                                pixelPosition.x(),
-                                pixelPosition.y(),
-                                activeColor);
-                break;
-            case TOOL_SPRAY_CAN:
-                break;
-            default:
-                break;
-        }
-        bitmap_draw_line(
-                &bitmap,
-                lastPixelPosition.x(),
-                lastPixelPosition.y(),
-                pixelPosition.x(),
-                pixelPosition.y(),
-                activeColor);
-        updateTexture();
-        update();
-    }
+
+    applyTools();
 
     lastMousePosition = mousePosition;
     mousePosition = event->globalPos();
@@ -274,4 +244,78 @@ void ImageWidget::resizeGL(int width, int height)
 
 ImageWidget::~ImageWidget()
 {
+}
+
+void ImageWidget::applyTools()
+{
+    if (isLeftButtonDown) {
+        QPoint lastPixelPosition = globalToBitmap(lastMousePosition);
+        QPoint pixelPosition = globalToBitmap(mousePosition);
+        switch (activeTool) {
+            case TOOL_PENCIL:
+                bitmap_draw_line(
+                        &bitmap,
+                        lastPixelPosition.x(),
+                        lastPixelPosition.y(),
+                        pixelPosition.x(),
+                        pixelPosition.y(),
+                        activeColor);
+                break;
+            case TOOL_PAINTBRUSH:
+                for (int y = -5; y < 5; y++) {
+                    for (int x = -5; x < 5; x++) {
+                        if (sqrt((double)(x * x) + (double)(y * y)) < 5.0f) {
+                            bitmap_draw_line(
+                                    &bitmap,
+                                    lastPixelPosition.x() + x,
+                                    lastPixelPosition.y() + y,
+                                    pixelPosition.x() + x,
+                                    pixelPosition.y() + y,
+                                    activeColor);
+                        }
+                    }
+                }
+                break;
+            case TOOL_COLOR_PICKER:
+                Color color;
+                if (bitmap_get_pixel(&bitmap, pixelPosition.x(), pixelPosition.y(), &color)) {
+                    activeColor = color;
+                    emit sendColorChanged(color);
+                }
+                break;
+            case TOOL_PAINT_BUCKET:
+                        bitmap_fill(
+                                &bitmap,
+                                pixelPosition.x(),
+                                pixelPosition.y(),
+                                activeColor);
+                break;
+            case TOOL_SPRAY_CAN:
+                /* useSprayCan(); */
+                if (!timer->isActive()) {
+                    timer->start();
+                }
+                break;
+            default:
+                break;
+        }
+        updateTexture();
+        update();
+    }
+}
+
+void ImageWidget::useSprayCan()
+{
+    QPoint pixelPosition = globalToBitmap(mousePosition);
+    int x = pixelPosition.x();
+    int y = pixelPosition.y();
+    for (int i = 0; i < 20; i++) {
+        int dx = QRandomGenerator::global()->bounded(-20, 20);
+        int dy = QRandomGenerator::global()->bounded(-20, 20);
+        if (sqrt((double)(dx * dx) + (double)(dy * dy)) < 20.0f) {
+            bitmap_draw_pixel(&bitmap, x + dx, y + dy, activeColor);
+        }
+    }
+    updateTexture();
+    update();
 }

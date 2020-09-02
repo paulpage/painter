@@ -24,7 +24,9 @@ SOURCES += \
 HEADERS += \
     src/Editor.h \
     src/ImageWidget.h \
-    src/Bitmap.h
+    src/Bitmap.h \
+    src/common.h
+
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
