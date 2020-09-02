@@ -20,6 +20,7 @@
 #include <QString>
 #include <QTimer>
 #include <QWheelEvent>
+#include <QVector>
 
 #include "Bitmap.h"
 #include "common.h"
@@ -49,7 +50,7 @@ public:
     void paintGL() override;
     void resizeGL(int width, int height) override;
 
-    Bitmap bitmap;
+    QVector<Bitmap> bitmaps;
     Tool activeTool = TOOL_PENCIL;
     Color activeColor = {255, 0, 0, 255};
 

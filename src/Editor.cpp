@@ -169,7 +169,7 @@ void Editor::colorButtonClicked(QAbstractButton *button)
 
 void Editor::newFile()
 {
-    imageWidget->bitmap = bitmap_create(100, 100);
+    imageWidget->bitmaps.append(bitmap_create(100, 100));
     imageWidget->setVisible(true);
     imageWidget->adjustSize();
 
@@ -219,10 +219,10 @@ void Editor::save()
         }
         if (write) {
             QImage image(
-                    imageWidget->bitmap.data,
-                    imageWidget->bitmap.width,
-                    imageWidget->bitmap.height,
-                    imageWidget->bitmap.width * 4,
+                    imageWidget->bitmaps.first().data,
+                    imageWidget->bitmaps.first().width,
+                    imageWidget->bitmaps.first().height,
+                    imageWidget->bitmaps.first().width * 4,
                     QImage::Format_RGBA8888,
                     nullptr,
                     nullptr);
