@@ -26,7 +26,7 @@
 #include "common.h"
 
 QT_FORWARD_DECLARE_CLASS(QOpenGLShaderProgram);
-QT_FORWARD_DECLARE_CLASS(QOpenGLTexture)
+QT_FORWARD_DECLARE_CLASS(QOpenGLTexture);
 
 class ImageWidget : public QOpenGLWidget, protected QOpenGLFunctions
 {

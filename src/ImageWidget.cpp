@@ -5,7 +5,7 @@
 
 ImageWidget::ImageWidget(QWidget *parent)
 {
-    bitmaps.append(bitmap_create(800, 600));
+    /* bitmaps.append(bitmap_create(800, 600)); */
     QImage image(bitmaps.first().data, bitmaps.first().width, bitmaps.first().height, bitmaps.first().width * 4, QImage::Format_RGBA8888, nullptr, nullptr);
     texture = new QOpenGLTexture(image);
     setBackgroundRole(QPalette::Dark);
@@ -67,6 +67,7 @@ bool ImageWidget::loadFile(QString fileName)
                 (unsigned char)qBlue(c),
                 (unsigned char)qAlpha(c),
             };
+            bitmap_draw_pixel(&bitmaps.first(), x, y, color);
         }
     }
 
