@@ -23,6 +23,7 @@
 #include <QVector>
 
 #include "Bitmap.h"
+#include "Layer.h"
 #include "common.h"
 
 QT_FORWARD_DECLARE_CLASS(QOpenGLShaderProgram);
@@ -38,7 +39,7 @@ public:
     ImageWidget(QWidget *parent);
     ~ImageWidget();
 
-    QPoint globalToBitmap(QPoint g);
+    QPoint globalToLayer(Layer layer, QPoint g);
     void adjustScrollBar(QScrollBar *scrollBar, double factor);
     bool loadFile(QString fileName);
     void scaleImage(double factor);
@@ -50,7 +51,7 @@ public:
     void paintGL() override;
     void resizeGL(int width, int height) override;
 
-    QVector<Bitmap> bitmaps;
+    QVector<Layer> layers;
     Tool activeTool = TOOL_PENCIL;
     Color activeColor = {255, 0, 0, 255};
 
@@ -70,7 +71,7 @@ private:
     QOpenGLShaderProgram *program;
 
     void useSprayCan();
-    void updateTexture();
+    void updateTextures();
     void applyTools();
 };
 

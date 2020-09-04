@@ -82,6 +82,10 @@ Editor::Editor()
     rightLayout->addWidget(colorWidget);
     rightLayout->setAlignment(Qt::AlignTop);
     rightDock->setWidget(rightContent);
+
+    // Layers
+    layerList = new QListWidget;
+    colorLayout->addWidget(layerList);
     
     setCentralWidget(imageWidget);
     addDockWidget(Qt::LeftDockWidgetArea, leftDock);
@@ -169,7 +173,9 @@ void Editor::colorButtonClicked(QAbstractButton *button)
 
 void Editor::newFile()
 {
-    imageWidget->bitmaps.append(bitmap_create(100, 100));
+    Layer layer(100, 100);
+    imageWidget->layers.append(layer);
+    layerList->addItem(layer.name);
     imageWidget->setVisible(true);
     imageWidget->adjustSize();
 
@@ -186,7 +192,7 @@ void Editor::open()
 
     QString fileName;
     if (dialog.exec() == QDialog::Accepted) {
-        fileName = dialog.selectedFiles().first();
+        fileName = dialog.selectedFiles().at(0);
         if (imageWidget->loadFile(fileName)) {
             setWindowFilePath(fileName);
             zoomInAction->setEnabled(true);
@@ -205,7 +211,7 @@ void Editor::save()
     initializeImageFileDialog(&dialog, QFileDialog::AcceptSave);
     QString fileName;
     if (dialog.exec() == QDialog::Accepted) {
-        fileName = dialog.selectedFiles().first();
+        fileName = dialog.selectedFiles().at(0);
         bool write = true;
         QFile file(fileName);
         if (file.exists()) {
@@ -219,10 +225,10 @@ void Editor::save()
         }
         if (write) {
             QImage image(
-                    imageWidget->bitmaps.first().data,
-                    imageWidget->bitmaps.first().width,
-                    imageWidget->bitmaps.first().height,
-                    imageWidget->bitmaps.first().width * 4,
+                    imageWidget->layers.first().bitmap.data,
+                    imageWidget->layers.first().bitmap.width,
+                    imageWidget->layers.first().bitmap.height,
+                    imageWidget->layers.first().bitmap.width * 4,
                     QImage::Format_RGBA8888,
                     nullptr,
                     nullptr);

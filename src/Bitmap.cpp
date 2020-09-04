@@ -142,6 +142,7 @@ void bitmap_fill(Bitmap *bitmap, int x, int y, Color color)
         Point p;
         if (bitmap_get_pixel(bitmap, x, y, &currentColor)) {
             if (color_eq(currentColor, color)) {
+                pq_free(&q);
                 return;
             }
         }

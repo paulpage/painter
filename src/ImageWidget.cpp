@@ -5,27 +5,29 @@
 
 ImageWidget::ImageWidget(QWidget *parent)
 {
+    Layer layer = Layer(800, 600);
+    layers.append(layer);
     /* bitmaps.append(bitmap_create(800, 600)); */
-    QImage image(bitmaps.first().data, bitmaps.first().width, bitmaps.first().height, bitmaps.first().width * 4, QImage::Format_RGBA8888, nullptr, nullptr);
-    texture = new QOpenGLTexture(image);
+    /* QImage image(bitmaps.first().data, bitmaps.first().width, bitmaps.first().height, bitmaps.first().width * 4, QImage::Format_RGBA8888, nullptr, nullptr); */
+    /* texture = new QOpenGLTexture(image); */
     setBackgroundRole(QPalette::Dark);
     timer = new QTimer(this);
-    timer->setInterval(20);
+    timer->setInterval(5);
     connect(timer, &QTimer::timeout, this, QOverload<>::of(&ImageWidget::useSprayCan));
     connect(this, SIGNAL(sendColorChanged(Color)), parent, SLOT(setActiveColor(Color)));
 }
 
-QPoint ImageWidget::globalToBitmap(QPoint g)
+QPoint ImageWidget::globalToLayer(Layer layer, QPoint g)
 {
     QPoint base = g - mapToGlobal(QPoint(0, 0));
-    double bitmapWidth = scaleFactor * (double)bitmaps.first().width;
-    double bitmapStartX = (double)width() / 2 - bitmapWidth / 2 + offsetX;
-    double screenDistanceX = (double)base.x() - bitmapStartX;
+    double layerWidth = scaleFactor * (double)layer.width;
+    double layerStartX = (double)width() / 2 - layerWidth / 2 + offsetX;
+    double screenDistanceX = (double)base.x() - layerStartX;
     int bx = (int)(screenDistanceX / scaleFactor);
 
-    double bitmapHeight = scaleFactor * (double)bitmaps.first().height;
-    double bitmapStartY = (double)height() / 2 - bitmapHeight / 2 + offsetY;
-    double screenDistanceY = (double)base.y() - bitmapStartY;
+    double layerHeight = scaleFactor * (double)layer.height;
+    double layerStartY = (double)height() / 2 - layerHeight / 2 + offsetY;
+    double screenDistanceY = (double)base.y() - layerStartY;
     int by = (int)(screenDistanceY / scaleFactor);
 
     return QPoint(bx, by);
@@ -34,7 +36,7 @@ QPoint ImageWidget::globalToBitmap(QPoint g)
 void ImageWidget::scaleImage(double factor)
 {
     scaleFactor *= factor;
-    updateTexture();
+    updateTextures();
 
     /* adjustScrollBar(horizontalScrollBar(), factor); */
     /* adjustScrollBar(verticalScrollBar(), factor); */
@@ -57,22 +59,22 @@ bool ImageWidget::loadFile(QString fileName)
                                  .arg(QDir::toNativeSeparators(fileName), reader.errorString()));
         return false;
     }
-    bitmaps.append(bitmap_create(image.width(), image.height()));
-    for (int y = 0; y < image.height(); y++) {
-        for (int x = 0; x < image.width(); x++) {
-            QRgb c = image.pixel(x, y);
-            Color color = {
-                (unsigned char)qRed(c),
-                (unsigned char)qGreen(c),
-                (unsigned char)qBlue(c),
-                (unsigned char)qAlpha(c),
-            };
-            bitmap_draw_pixel(&bitmaps.first(), x, y, color);
-        }
-    }
+    layers.append(Layer(image));
+    /* for (int y = 0; y < image.height(); y++) { */
+    /*     for (int x = 0; x < image.width(); x++) { */
+    /*         QRgb c = image.pixel(x, y); */
+    /*         Color color = { */
+    /*             (unsigned char)qRed(c), */
+    /*             (unsigned char)qGreen(c), */
+    /*             (unsigned char)qBlue(c), */
+    /*             (unsigned char)qAlpha(c), */
+    /*         }; */
+    /*         bitmap_draw_pixel(&bitmaps.first(), x, y, color); */
+    /*     } */
+    /* } */
 
     scaleFactor = 1.0;
-    updateTexture();
+    updateTextures();
     setVisible(true);
 
     return true;
@@ -111,7 +113,7 @@ void ImageWidget::mousePressEvent(QMouseEvent *event) {
 
     applyTools();
 
-    updateTexture();
+    updateTextures();
     event->accept();
 }
 
@@ -147,7 +149,7 @@ void ImageWidget::initializeGL()
 {
     initializeOpenGLFunctions();
 
-    updateTexture();
+    updateTextures();
 
     QOpenGLShader *vertShader = new QOpenGLShader(QOpenGLShader::Vertex, this);
     const char *vertSrc =
@@ -187,53 +189,60 @@ void ImageWidget::initializeGL()
 
 }
 
-void ImageWidget::updateTexture() {
+void ImageWidget::updateTextures() {
     if (isValid()) {
-        QImage image(bitmaps.first().data, bitmaps.first().width, bitmaps.first().height, bitmaps.first().width * 4, QImage::Format_RGBA8888, nullptr, nullptr);
-        delete texture;
-        texture = new QOpenGLTexture(image);
-        texture->setMinMagFilters(QOpenGLTexture::Nearest, QOpenGLTexture::Nearest);
+        for (Layer layer : qAsConst(layers)) {
+            layer.updateTexture();
+        }
+        /* QImage image(bitmaps.first().data, bitmaps.first().width, bitmaps.first().height, bitmaps.first().width * 4, QImage::Format_RGBA8888, nullptr, nullptr); */
+        /* delete texture; */
+        /* texture = new QOpenGLTexture(image); */
+        /* texture->setMinMagFilters(QOpenGLTexture::Nearest, QOpenGLTexture::Nearest); */
     }
 }
 
 void ImageWidget::paintGL()
 {
     QOpenGLBuffer vbo;
-    GLfloat xRatio = (GLfloat)scaleFactor * (GLfloat)bitmaps.first().width / (GLfloat)width();
-    GLfloat yRatio = (GLfloat)scaleFactor * (GLfloat)bitmaps.first().height / (GLfloat)height();
-    GLfloat scaledOffsetX = (GLfloat)offsetX * 2 / (GLfloat)width();
-    GLfloat scaledOffsetY = (GLfloat)offsetY * 2 / (GLfloat)height();
-    GLfloat vertData[24] = {
-        -xRatio + scaledOffsetX, -yRatio - scaledOffsetY, 0, 1,
-        +xRatio + scaledOffsetX, -yRatio - scaledOffsetY, 1, 1,
-        +xRatio + scaledOffsetX, +yRatio - scaledOffsetY, 1, 0,
-        -xRatio + scaledOffsetX, -yRatio - scaledOffsetY, 0, 1,
-        +xRatio + scaledOffsetX, +yRatio - scaledOffsetY, 1, 0,
-        -xRatio + scaledOffsetX, +yRatio - scaledOffsetY, 0, 0,
-    };
-    vbo.create();
-    vbo.bind();
-    vbo.allocate(vertData, 24 * sizeof(GLfloat));
 
-    glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
+    for (const Layer& layer : qAsConst(layers)) {
+        GLfloat xRatio = (GLfloat)scaleFactor * (GLfloat)layer.bitmap.width / (GLfloat)width();
+        GLfloat yRatio = (GLfloat)scaleFactor * (GLfloat)layer.bitmap.height / (GLfloat)height();
+        GLfloat scaledOffsetX = (GLfloat)offsetX * 2 / (GLfloat)width();
+        GLfloat scaledOffsetY = (GLfloat)offsetY * 2 / (GLfloat)height();
+        GLfloat vertData[24] = {
+            -xRatio + scaledOffsetX, -yRatio - scaledOffsetY, 0, 1,
+            +xRatio + scaledOffsetX, -yRatio - scaledOffsetY, 1, 1,
+            +xRatio + scaledOffsetX, +yRatio - scaledOffsetY, 1, 0,
+            -xRatio + scaledOffsetX, -yRatio - scaledOffsetY, 0, 1,
+            +xRatio + scaledOffsetX, +yRatio - scaledOffsetY, 1, 0,
+            -xRatio + scaledOffsetX, +yRatio - scaledOffsetY, 0, 0,
+        };
+        vbo.create();
+        vbo.bind();
+        vbo.allocate(vertData, 24 * sizeof(GLfloat));
 
-    program->enableAttributeArray(0);
-    program->setAttributeBuffer(
-            0,
-            GL_FLOAT,
-            0,
-            2,
-            4 * sizeof(GLfloat));
-    program->enableAttributeArray(1);
-    program->setAttributeBuffer(
-            1,
-            GL_FLOAT,
-            2 * sizeof(GLfloat),
-            2,
-            4 * sizeof(GLfloat));
-    texture->bind();
-    glDrawArrays(GL_TRIANGLES, 0, 6);
+        glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        program->enableAttributeArray(0);
+        program->setAttributeBuffer(
+                0,
+                GL_FLOAT,
+                0,
+                2,
+                4 * sizeof(GLfloat));
+        program->enableAttributeArray(1);
+        program->setAttributeBuffer(
+                1,
+                GL_FLOAT,
+                2 * sizeof(GLfloat),
+                2,
+                4 * sizeof(GLfloat));
+        layer.texture->bind();
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+    }
+
     update();
 }
 
@@ -249,12 +258,12 @@ ImageWidget::~ImageWidget()
 void ImageWidget::applyTools()
 {
     if (isLeftButtonDown) {
-        QPoint lastPixelPosition = globalToBitmap(lastMousePosition);
-        QPoint pixelPosition = globalToBitmap(mousePosition);
+        QPoint lastPixelPosition = globalToLayer(layers.first(), lastMousePosition);
+        QPoint pixelPosition = globalToLayer(layers.first(), mousePosition);
         switch (activeTool) {
             case TOOL_PENCIL:
                 bitmap_draw_line(
-                        &bitmaps.first(),
+                        &layers.first().bitmap,
                         lastPixelPosition.x(),
                         lastPixelPosition.y(),
                         pixelPosition.x(),
@@ -266,7 +275,7 @@ void ImageWidget::applyTools()
                     for (int x = -5; x < 5; x++) {
                         if (sqrt((double)(x * x) + (double)(y * y)) < 5.0f) {
                             bitmap_draw_line(
-                                    &bitmaps.first(),
+                                    &layers.first().bitmap,
                                     lastPixelPosition.x() + x,
                                     lastPixelPosition.y() + y,
                                     pixelPosition.x() + x,
@@ -278,20 +287,19 @@ void ImageWidget::applyTools()
                 break;
             case TOOL_COLOR_PICKER:
                 Color color;
-                if (bitmap_get_pixel(&bitmaps.first(), pixelPosition.x(), pixelPosition.y(), &color)) {
+                if (bitmap_get_pixel(&layers.first().bitmap, pixelPosition.x(), pixelPosition.y(), &color)) {
                     activeColor = color;
                     emit sendColorChanged(color);
                 }
                 break;
             case TOOL_PAINT_BUCKET:
                         bitmap_fill(
-                                &bitmaps.first(),
+                                &layers.first().bitmap,
                                 pixelPosition.x(),
                                 pixelPosition.y(),
                                 activeColor);
                 break;
             case TOOL_SPRAY_CAN:
-                /* useSprayCan(); */
                 if (!timer->isActive()) {
                     timer->start();
                 }
@@ -299,23 +307,23 @@ void ImageWidget::applyTools()
             default:
                 break;
         }
-        updateTexture();
+        updateTextures();
         update();
     }
 }
 
 void ImageWidget::useSprayCan()
 {
-    QPoint pixelPosition = globalToBitmap(mousePosition);
+    QPoint pixelPosition = globalToLayer(layers.first(), mousePosition);
     int x = pixelPosition.x();
     int y = pixelPosition.y();
     for (int i = 0; i < 20; i++) {
         int dx = QRandomGenerator::global()->bounded(-20, 20);
         int dy = QRandomGenerator::global()->bounded(-20, 20);
         if (sqrt((double)(dx * dx) + (double)(dy * dy)) < 20.0f) {
-            bitmap_draw_pixel(&bitmaps.first(), x + dx, y + dy, activeColor);
+            bitmap_draw_pixel(&layers.first().bitmap, x + dx, y + dy, activeColor);
         }
     }
-    updateTexture();
+    updateTextures();
     update();
 }
