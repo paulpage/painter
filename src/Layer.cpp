@@ -5,8 +5,8 @@
 Layer::Layer(int width, int height, QString name): width(width), height(height), name(name)
 {
     bitmap = bitmap_create(width, height);
-    QImage image(bitmap.data, bitmap.width, bitmap.height, bitmap.width * 4, QImage::Format_RGBA8888, nullptr, nullptr);
-    texture = new QOpenGLTexture(image);
+    /* QImage image(bitmap.data, bitmap.width, bitmap.height, bitmap.width * 4, QImage::Format_RGBA8888, nullptr, nullptr); */
+    /* texture = new QOpenGLTexture(image); */
 }
 
 Layer::Layer(QImage image, QString name): name(name)
@@ -33,9 +33,13 @@ Layer::~Layer()
 {
 }
 
-void Layer::updateTexture()
-{
-    QImage image(bitmap.data, bitmap.width, bitmap.height, bitmap.width * 4, QImage::Format_RGBA8888, nullptr, nullptr);
-    texture->setData(image);
-    texture->setMinMagFilters(QOpenGLTexture::Nearest, QOpenGLTexture::Nearest);
-}
+/* void Layer::updateTexture() */
+/* { */
+/*     QImage image(bitmap.data, bitmap.width, bitmap.height, bitmap.width * 4, QImage::Format_RGBA8888, nullptr, nullptr); */
+/*     if (texture->isCreated()) { */
+/*         texture->destroy(); */
+/*         texture->setData(image); */
+/*         texture->create(); */
+/*         texture->setMinMagFilters(QOpenGLTexture::Nearest, QOpenGLTexture::Nearest); */
+/*     } */
+/* } */
