@@ -191,13 +191,15 @@ void ImageWidget::initializeGL()
 
 void ImageWidget::updateTextures() {
     if (isValid()) {
-        for (Layer layer : qAsConst(layers)) {
+        for (Layer& layer : layers) {
             layer.updateTexture();
         }
         /* QImage image(bitmaps.first().data, bitmaps.first().width, bitmaps.first().height, bitmaps.first().width * 4, QImage::Format_RGBA8888, nullptr, nullptr); */
         /* delete texture; */
         /* texture = new QOpenGLTexture(image); */
         /* texture->setMinMagFilters(QOpenGLTexture::Nearest, QOpenGLTexture::Nearest); */
+    } else {
+        printf("is not valid\n");
     }
 }
 
@@ -239,7 +241,8 @@ void ImageWidget::paintGL()
                 2 * sizeof(GLfloat),
                 2,
                 4 * sizeof(GLfloat));
-        layer.texture->bind();
+        /* layer.texture->bind(); */
+        glBindTexture(GL_TEXTURE_2D, layer.textureId);
         glDrawArrays(GL_TRIANGLES, 0, 6);
     }
 

@@ -18,7 +18,7 @@ public:
     int width;
     int height;
     QString name;
-    QOpenGLTexture *texture;
+    GLuint textureId = 0;
     Bitmap bitmap;
 };
 
