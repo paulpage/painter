@@ -29,6 +29,8 @@
 #include <QStandardPaths>
 #include <QStatusBar>
 
+#define PALLETTE_LENGTH 8
+
 class Editor : public QMainWindow
 {
     Q_OBJECT
@@ -60,16 +62,20 @@ private:
     QButtonGroup *toolGroup;
     QButtonGroup *colorGroup;
     QListWidget *layerList;
-    Color pallette[5] = {
+    Color pallette[PALLETTE_LENGTH] = {
         {255, 0, 0, 255},
         {0, 255, 0, 255},
         {0, 0, 255, 255},
+        {255, 255, 0, 255},
+        {255, 0, 255, 255},
+        {0, 255, 255, 255},
         {0, 0, 0, 255},
         {255, 255, 255, 255},
     };
 
     void toolButtonClicked(QAbstractButton *button);
     void colorButtonClicked(QAbstractButton *button);
+    void layerListSelectionChanged();
 
     QAction *newAction;
     QAction *openAction;

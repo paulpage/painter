@@ -3,6 +3,7 @@
 
 #include <QColor>
 #include <QDir>
+#include <QElapsedTimer>
 #include <QExposeEvent>
 #include <QGuiApplication>
 #include <QImageReader>
@@ -19,8 +20,8 @@
 #include <QScrollBar>
 #include <QString>
 #include <QTimer>
-#include <QWheelEvent>
 #include <QVector>
+#include <QWheelEvent>
 
 #include "Bitmap.h"
 #include "Layer.h"
@@ -60,6 +61,7 @@ signals:
 
 private:
     QTimer *timer;
+    QElapsedTimer *eTimer;
     double scaleFactor = 1;
     QPoint mousePosition;
     QPoint lastMousePosition;

@@ -45,25 +45,11 @@ void Layer::updateTexture()
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // TODO what does this do?
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL); // TODO what does this do?
     QImage image(bitmap.data, bitmap.width, bitmap.height, bitmap.width * 4, QImage::Format_RGBA8888, nullptr, nullptr);
-    /* QImage im(filename); */
-    /* QImage tex = QGLWidget::convertToGLFormat(image); */
 
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image.width(), image.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, image.bits());
 
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
     glDisable(GL_TEXTURE_2D);
-
-    /* return tex; */
-
-
-    /* QImage image(bitmap.data, bitmap.width, bitmap.height, bitmap.width * 4, QImage::Format_RGBA8888, nullptr, nullptr); */
-    /* glGenTextures( */
-    /* /1* if (texture->isCreated()) { *1/ */
-    /* /1*     texture->destroy(); *1/ */
-    /*     texture->setData(image); */
-    /*     /1* texture->create(); *1/ */
-    /*     texture->setMinMagFilters(QOpenGLTexture::Nearest, QOpenGLTexture::Nearest); */
-    /* /1* } *1/ */
 }

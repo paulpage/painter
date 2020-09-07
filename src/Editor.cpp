@@ -1,3 +1,5 @@
+#include <QHBoxLayout>
+
 #include "common.h"
 #include "Editor.h"
 
@@ -64,14 +66,16 @@ Editor::Editor()
     QVBoxLayout *colorLayout = new QVBoxLayout(colorWidget);
     colorGroup = new QButtonGroup;
     colorGroup->setExclusive(true);
-    QPushButton *colorButtons[5] = {
-        new QPushButton("Red"),
-        new QPushButton("Green"),
-        new QPushButton("Blue"),
-        new QPushButton("Black"),
-        new QPushButton("White"),
-    };
-    for (int i = 0; i < 5; i++) {
+
+    QPushButton *colorButtons[PALLETTE_LENGTH];
+    for (int i = 0; i < PALLETTE_LENGTH; i++) {
+        colorButtons[i] = new QPushButton;
+
+        QPixmap pixmap(64, 64);
+        pixmap.fill(QColor(pallette[i].r, pallette[i].g, pallette[i].b, pallette[i].a));
+        QIcon icon(pixmap);
+        colorButtons[i]->setIcon(icon);
+
         colorLayout->addWidget(colorButtons[i]);
         colorGroup->addButton(colorButtons[i], i);
         colorButtons[i]->setCheckable(true);
@@ -133,6 +137,8 @@ Editor::Editor()
     zoomOutAction->setEnabled(false);
 
     QMenu *imageMenu = menuBar()->addMenu(tr("&Image"));
+
+    newFile();
 }
 
 void Editor::toolButtonClicked(QAbstractButton *button)
@@ -144,36 +150,20 @@ void Editor::toolButtonClicked(QAbstractButton *button)
 void Editor::colorButtonClicked(QAbstractButton *button)
 {
     int c = colorGroup->id(button);
-    if (c >= 0 && c < 5) {
+    if (c >= 0 && c < PALLETTE_LENGTH) {
         imageWidget->activeColor = pallette[c];
         button->setChecked(true);
     }
-    /* Color color = {0, 0, 0, 0}; */
-    /* switch (colorGroup->id(button)) { */
-    /*     case 0: */
-    /*         color = {255, 0, 0, 255}; */
-    /*         break; */
-    /*     case 1: */
-    /*         color = {0, 255, 0, 255}; */
-    /*         break; */
-    /*     case 2: */
-    /*         color = {0, 0, 255, 255}; */
-    /*         break; */
-    /*     case 3: */
-    /*         color = {0, 0, 0, 255}; */
-    /*         break; */
-    /*     case 4: */
-    /*         color = {255, 255, 255, 255}; */
-    /*         break; */
-    /* } */
-    /* printf("Set color to (%d %d %d %d)\n", color.r, color.g, color.b, color.a); */
-    /* imageWidget->activeColor = color; */
-    /* button->setChecked(true); */
+}
+
+void Editor::layerListSelectionChanged()
+{
+    layerList->selectedItems().first().name();
 }
 
 void Editor::newFile()
 {
-    Layer layer(100, 100);
+    Layer layer(800, 600);
     imageWidget->layers.append(layer);
     layerList->addItem(layer.name);
     imageWidget->setVisible(true);
@@ -281,7 +271,7 @@ void Editor::fitToWindow()
 
 void Editor::setActiveColor(Color color)
 {
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < PALLETTE_LENGTH; i++) {
         if (color_eq(pallette[i], color)) {
             imageWidget->activeColor = pallette[i];
             colorGroup->button(i)->setChecked(true);

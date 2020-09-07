@@ -5,13 +5,10 @@
 
 ImageWidget::ImageWidget(QWidget *parent)
 {
-    Layer layer = Layer(800, 600);
-    layers.append(layer);
-    /* bitmaps.append(bitmap_create(800, 600)); */
-    /* QImage image(bitmaps.first().data, bitmaps.first().width, bitmaps.first().height, bitmaps.first().width * 4, QImage::Format_RGBA8888, nullptr, nullptr); */
-    /* texture = new QOpenGLTexture(image); */
     setBackgroundRole(QPalette::Dark);
     timer = new QTimer(this);
+    eTimer = new QElapsedTimer;
+    eTimer->start();
     timer->setInterval(5);
     connect(timer, &QTimer::timeout, this, QOverload<>::of(&ImageWidget::useSprayCan));
     connect(this, SIGNAL(sendColorChanged(Color)), parent, SLOT(setActiveColor(Color)));
@@ -60,18 +57,6 @@ bool ImageWidget::loadFile(QString fileName)
         return false;
     }
     layers.append(Layer(image));
-    /* for (int y = 0; y < image.height(); y++) { */
-    /*     for (int x = 0; x < image.width(); x++) { */
-    /*         QRgb c = image.pixel(x, y); */
-    /*         Color color = { */
-    /*             (unsigned char)qRed(c), */
-    /*             (unsigned char)qGreen(c), */
-    /*             (unsigned char)qBlue(c), */
-    /*             (unsigned char)qAlpha(c), */
-    /*         }; */
-    /*         bitmap_draw_pixel(&bitmaps.first(), x, y, color); */
-    /*     } */
-    /* } */
 
     scaleFactor = 1.0;
     updateTextures();
@@ -186,7 +171,6 @@ void ImageWidget::initializeGL()
     program->bind();
 
     program->setUniformValue("texture", 0);
-
 }
 
 void ImageWidget::updateTextures() {
@@ -194,10 +178,6 @@ void ImageWidget::updateTextures() {
         for (Layer& layer : layers) {
             layer.updateTexture();
         }
-        /* QImage image(bitmaps.first().data, bitmaps.first().width, bitmaps.first().height, bitmaps.first().width * 4, QImage::Format_RGBA8888, nullptr, nullptr); */
-        /* delete texture; */
-        /* texture = new QOpenGLTexture(image); */
-        /* texture->setMinMagFilters(QOpenGLTexture::Nearest, QOpenGLTexture::Nearest); */
     } else {
         printf("is not valid\n");
     }
@@ -241,7 +221,6 @@ void ImageWidget::paintGL()
                 2 * sizeof(GLfloat),
                 2,
                 4 * sizeof(GLfloat));
-        /* layer.texture->bind(); */
         glBindTexture(GL_TEXTURE_2D, layer.textureId);
         glDrawArrays(GL_TRIANGLES, 0, 6);
     }
@@ -260,6 +239,8 @@ ImageWidget::~ImageWidget()
 
 void ImageWidget::applyTools()
 {
+    QElapsedTimer eTimer2 = QElapsedTimer();
+    eTimer2.start();
     if (isLeftButtonDown) {
         QPoint lastPixelPosition = globalToLayer(layers.first(), lastMousePosition);
         QPoint pixelPosition = globalToLayer(layers.first(), mousePosition);
@@ -312,6 +293,10 @@ void ImageWidget::applyTools()
         }
         updateTextures();
         update();
+
+        qDebug() << "Time since last tool apply:" << eTimer->nsecsElapsed()/1000 << "us";
+        qDebug() << "Tool apply time:" << eTimer2.nsecsElapsed()/1000 << "us";
+        eTimer->start();
     }
 }
 
