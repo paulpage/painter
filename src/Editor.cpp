@@ -1,4 +1,5 @@
 #include <QHBoxLayout>
+#include <QItemSelectionModel>
 
 #include "common.h"
 #include "Editor.h"
@@ -88,7 +89,20 @@ Editor::Editor()
     rightDock->setWidget(rightContent);
 
     // Layers
-    layerList = new QListWidget;
+    layerList = new QListView;
+    layerListModel = new QStringListModel(this);
+    QStringList layerNames;
+    for (const Layer& layer : imageWidget->layers) {
+        layerNames << layer.name;
+    }
+    layerListModel->setStringList(layerNames);
+    layerList->setModel(layerListModel);
+
+
+    connect(colorGroup, QOverload<QAbstractButton *>::of(&QButtonGroup::buttonClicked), this, &Editor::colorButtonClicked);
+
+    connect(layerList->selectionModel(), &QItemSelectionModel::selectionChanged, this, &Editor::layerListSelectionChanged);
+
     colorLayout->addWidget(layerList);
     
     setCentralWidget(imageWidget);
@@ -158,14 +172,17 @@ void Editor::colorButtonClicked(QAbstractButton *button)
 
 void Editor::layerListSelectionChanged()
 {
-    layerList->selectedItems().first().name();
+    printf("Selection changed\n");
+    int i = layerList->selectionModel()->selectedIndexes().first().row();
+    imageWidget->selectedLayer = &imageWidget->layers[i];
 }
 
 void Editor::newFile()
 {
+
     Layer layer(800, 600);
-    imageWidget->layers.append(layer);
-    layerList->addItem(layer.name);
+    addLayer(layer);
+
     imageWidget->setVisible(true);
     imageWidget->adjustSize();
 
@@ -277,6 +294,17 @@ void Editor::setActiveColor(Color color)
             colorGroup->button(i)->setChecked(true);
         }
     }
+}
+
+void Editor::addLayer(Layer layer)
+{
+    imageWidget->layers.append(layer);
+    QStringList layerNames;
+    for (const Layer& layer : imageWidget->layers) {
+        layerNames << layer.name;
+    }
+    layerListModel->setStringList(layerNames);
+    imageWidget->selectedLayer = &imageWidget->layers.last();
 }
 
 Editor::~Editor()

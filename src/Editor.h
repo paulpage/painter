@@ -17,7 +17,7 @@
 #include <QKeySequence>
 #include <QLabel>
 #include <QLayout>
-#include <QListWidget>
+#include <QListView>
 #include <QMainWindow>
 #include <QMenuBar>
 #include <QMessageBox>
@@ -28,6 +28,7 @@
 #include <QSizePolicy>
 #include <QStandardPaths>
 #include <QStatusBar>
+#include <QStringListModel>
 
 #define PALLETTE_LENGTH 8
 
@@ -61,7 +62,8 @@ private:
     ImageWidget *imageWidget;
     QButtonGroup *toolGroup;
     QButtonGroup *colorGroup;
-    QListWidget *layerList;
+    QListView *layerList;
+    QStringListModel *layerListModel;
     Color pallette[PALLETTE_LENGTH] = {
         {255, 0, 0, 255},
         {0, 255, 0, 255},
@@ -76,6 +78,8 @@ private:
     void toolButtonClicked(QAbstractButton *button);
     void colorButtonClicked(QAbstractButton *button);
     void layerListSelectionChanged();
+
+    void addLayer(Layer layer);
 
     QAction *newAction;
     QAction *openAction;

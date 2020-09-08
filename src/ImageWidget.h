@@ -40,7 +40,7 @@ public:
     ImageWidget(QWidget *parent);
     ~ImageWidget();
 
-    QPoint globalToLayer(Layer layer, QPoint g);
+    QPoint globalToLayer(Layer *layer, QPoint g);
     void adjustScrollBar(QScrollBar *scrollBar, double factor);
     bool loadFile(QString fileName);
     void scaleImage(double factor);
@@ -52,6 +52,7 @@ public:
     void paintGL() override;
     void resizeGL(int width, int height) override;
 
+    Layer *selectedLayer;
     QVector<Layer> layers;
     Tool activeTool = TOOL_PENCIL;
     Color activeColor = {255, 0, 0, 255};

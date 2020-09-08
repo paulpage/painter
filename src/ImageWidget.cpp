@@ -14,15 +14,15 @@ ImageWidget::ImageWidget(QWidget *parent)
     connect(this, SIGNAL(sendColorChanged(Color)), parent, SLOT(setActiveColor(Color)));
 }
 
-QPoint ImageWidget::globalToLayer(Layer layer, QPoint g)
+QPoint ImageWidget::globalToLayer(Layer *layer, QPoint g)
 {
     QPoint base = g - mapToGlobal(QPoint(0, 0));
-    double layerWidth = scaleFactor * (double)layer.width;
+    double layerWidth = scaleFactor * (double)layer->width;
     double layerStartX = (double)width() / 2 - layerWidth / 2 + offsetX;
     double screenDistanceX = (double)base.x() - layerStartX;
     int bx = (int)(screenDistanceX / scaleFactor);
 
-    double layerHeight = scaleFactor * (double)layer.height;
+    double layerHeight = scaleFactor * (double)layer->height;
     double layerStartY = (double)height() / 2 - layerHeight / 2 + offsetY;
     double screenDistanceY = (double)base.y() - layerStartY;
     int by = (int)(screenDistanceY / scaleFactor);
@@ -242,12 +242,12 @@ void ImageWidget::applyTools()
     QElapsedTimer eTimer2 = QElapsedTimer();
     eTimer2.start();
     if (isLeftButtonDown) {
-        QPoint lastPixelPosition = globalToLayer(layers.first(), lastMousePosition);
-        QPoint pixelPosition = globalToLayer(layers.first(), mousePosition);
+        QPoint lastPixelPosition = globalToLayer(selectedLayer, lastMousePosition);
+        QPoint pixelPosition = globalToLayer(selectedLayer, mousePosition);
         switch (activeTool) {
             case TOOL_PENCIL:
                 bitmap_draw_line(
-                        &layers.first().bitmap,
+                        &selectedLayer->bitmap,
                         lastPixelPosition.x(),
                         lastPixelPosition.y(),
                         pixelPosition.x(),
@@ -259,7 +259,7 @@ void ImageWidget::applyTools()
                     for (int x = -5; x < 5; x++) {
                         if (sqrt((double)(x * x) + (double)(y * y)) < 5.0f) {
                             bitmap_draw_line(
-                                    &layers.first().bitmap,
+                                    &selectedLayer->bitmap,
                                     lastPixelPosition.x() + x,
                                     lastPixelPosition.y() + y,
                                     pixelPosition.x() + x,
@@ -271,14 +271,14 @@ void ImageWidget::applyTools()
                 break;
             case TOOL_COLOR_PICKER:
                 Color color;
-                if (bitmap_get_pixel(&layers.first().bitmap, pixelPosition.x(), pixelPosition.y(), &color)) {
+                if (bitmap_get_pixel(&selectedLayer->bitmap, pixelPosition.x(), pixelPosition.y(), &color)) {
                     activeColor = color;
                     emit sendColorChanged(color);
                 }
                 break;
             case TOOL_PAINT_BUCKET:
                         bitmap_fill(
-                                &layers.first().bitmap,
+                                &selectedLayer->bitmap,
                                 pixelPosition.x(),
                                 pixelPosition.y(),
                                 activeColor);
@@ -302,14 +302,14 @@ void ImageWidget::applyTools()
 
 void ImageWidget::useSprayCan()
 {
-    QPoint pixelPosition = globalToLayer(layers.first(), mousePosition);
+    QPoint pixelPosition = globalToLayer(selectedLayer, mousePosition);
     int x = pixelPosition.x();
     int y = pixelPosition.y();
     for (int i = 0; i < 20; i++) {
         int dx = QRandomGenerator::global()->bounded(-20, 20);
         int dy = QRandomGenerator::global()->bounded(-20, 20);
         if (sqrt((double)(dx * dx) + (double)(dy * dy)) < 20.0f) {
-            bitmap_draw_pixel(&layers.first().bitmap, x + dx, y + dy, activeColor);
+            bitmap_draw_pixel(&selectedLayer->bitmap, x + dx, y + dy, activeColor);
         }
     }
     updateTextures();
