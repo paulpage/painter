@@ -17,7 +17,7 @@
 #include <QKeySequence>
 #include <QLabel>
 #include <QLayout>
-#include <QListView>
+#include <QTreeView>
 #include <QMainWindow>
 #include <QMenuBar>
 #include <QMessageBox>
@@ -63,7 +63,7 @@ private:
     ImageWidget *imageWidget;
     QButtonGroup *toolGroup;
     QButtonGroup *colorGroup;
-    QListView *layerList;
+    QTreeView *layerList;
     QStandardItemModel *layerListModel;
     Color pallette[PALLETTE_LENGTH] = {
         {255, 0, 0, 255},

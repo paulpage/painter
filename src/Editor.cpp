@@ -89,22 +89,12 @@ Editor::Editor()
     rightDock->setWidget(rightContent);
 
     // Layers
-    layerList = new QListView;
-    layerListModel = new QStandardItemModel(this);
-    /* QStringList layerNames; */
-    for (const Layer& layer : imageWidget->layers) {
-        QStandardItem *item = new QStandardItem();
-        item->setText(layer.name);
-        item->setCheckable(true);
-        item->setCheckState(Qt::Checked);
-        layerListModel->setItem(layerListModel->rowCount(), item);
-    }
-    /* for (const Layer& layer : imageWidget->layers) { */
-    /*     layerNames << layer.name; */
-    /* } */
-    /* layerListModel->setStringList(layerNames); */
-    layerList->setModel(layerListModel);
+    layerList = new QTreeView;
+    layerList->setRootIsDecorated(false);
 
+    layerListModel = new QStandardItemModel(0, 1, this);
+    layerListModel->setHeaderData(0, Qt::Horizontal, QObject::tr("Layers"));
+    layerList->setModel(layerListModel);
 
     connect(colorGroup, QOverload<QAbstractButton *>::of(&QButtonGroup::buttonClicked), this, &Editor::colorButtonClicked);
 
@@ -180,7 +170,6 @@ void Editor::colorButtonClicked(QAbstractButton *button)
 
 void Editor::layerListSelectionChanged()
 {
-    printf("Selection changed\n");
     int i = layerList->selectionModel()->selectedIndexes().first().row();
     imageWidget->selectedLayer = &imageWidget->layers[i];
 }
@@ -316,6 +305,8 @@ void Editor::addLayer(Layer layer)
     item->setText(layer.name);
     item->setCheckable(true);
     item->setCheckState(Qt::Checked);
+    item->setUserTristate(false);
+    item->setEditable(true); // TODO change layer name based on editing
     layerListModel->setItem(layerListModel->rowCount(), item);
     /* QStringList layerNames; */
     /* for (const Layer& layer : imageWidget->layers) { */

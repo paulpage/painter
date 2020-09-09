@@ -118,9 +118,6 @@ void ImageWidget::mouseMoveEvent(QMouseEvent *event)
         QPoint diff = event->globalPos() - mousePosition;
         offsetX += diff.x();
         offsetY += diff.y();
-        /* offsetX += (GLfloat)diff.x() * 2 / (GLfloat)width(); */
-        /* offsetY += (GLfloat)diff.y() * 2 / (GLfloat)height(); */
-        /* imageLabel->move(imageLabel->pos() + diff); */
     }
 
     applyTools();
@@ -244,8 +241,6 @@ ImageWidget::~ImageWidget()
 
 void ImageWidget::applyTools()
 {
-    QElapsedTimer eTimer2 = QElapsedTimer();
-    eTimer2.start();
     if (isLeftButtonDown) {
         QPoint lastPixelPosition = globalToLayer(selectedLayer, lastMousePosition);
         QPoint pixelPosition = globalToLayer(selectedLayer, mousePosition);
@@ -298,10 +293,6 @@ void ImageWidget::applyTools()
         }
         updateTextures();
         update();
-
-        qDebug() << "Time since last tool apply:" << eTimer->nsecsElapsed()/1000 << "us";
-        qDebug() << "Tool apply time:" << eTimer2.nsecsElapsed()/1000 << "us";
-        eTimer->start();
     }
 }
 
