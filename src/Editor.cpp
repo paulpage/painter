@@ -90,18 +90,26 @@ Editor::Editor()
 
     // Layers
     layerList = new QListView;
-    layerListModel = new QStringListModel(this);
-    QStringList layerNames;
+    layerListModel = new QStandardItemModel(this);
+    /* QStringList layerNames; */
     for (const Layer& layer : imageWidget->layers) {
-        layerNames << layer.name;
+        QStandardItem *item = new QStandardItem();
+        item->setText(layer.name);
+        item->setCheckable(true);
+        item->setCheckState(Qt::Checked);
+        layerListModel->setItem(layerListModel->rowCount(), item);
     }
-    layerListModel->setStringList(layerNames);
+    /* for (const Layer& layer : imageWidget->layers) { */
+    /*     layerNames << layer.name; */
+    /* } */
+    /* layerListModel->setStringList(layerNames); */
     layerList->setModel(layerListModel);
 
 
     connect(colorGroup, QOverload<QAbstractButton *>::of(&QButtonGroup::buttonClicked), this, &Editor::colorButtonClicked);
 
     connect(layerList->selectionModel(), &QItemSelectionModel::selectionChanged, this, &Editor::layerListSelectionChanged);
+    connect(layerListModel, &QStandardItemModel::itemChanged, this, &Editor::layerListModelUpdated);
 
     colorLayout->addWidget(layerList);
     
@@ -175,6 +183,11 @@ void Editor::layerListSelectionChanged()
     printf("Selection changed\n");
     int i = layerList->selectionModel()->selectedIndexes().first().row();
     imageWidget->selectedLayer = &imageWidget->layers[i];
+}
+
+void Editor::layerListModelUpdated(QStandardItem *item)
+{
+    imageWidget->layers[item->row()].isVisible = (item->checkState() == Qt::Checked);
 }
 
 void Editor::newFile()
@@ -299,11 +312,16 @@ void Editor::setActiveColor(Color color)
 void Editor::addLayer(Layer layer)
 {
     imageWidget->layers.append(layer);
-    QStringList layerNames;
-    for (const Layer& layer : imageWidget->layers) {
-        layerNames << layer.name;
-    }
-    layerListModel->setStringList(layerNames);
+    QStandardItem *item = new QStandardItem();
+    item->setText(layer.name);
+    item->setCheckable(true);
+    item->setCheckState(Qt::Checked);
+    layerListModel->setItem(layerListModel->rowCount(), item);
+    /* QStringList layerNames; */
+    /* for (const Layer& layer : imageWidget->layers) { */
+    /*     layerNames << layer.name; */
+    /* } */
+    /* layerListModel->setStringList(layerNames); */
     imageWidget->selectedLayer = &imageWidget->layers.last();
 }
 

@@ -20,6 +20,7 @@ public:
     QString name;
     GLuint textureId = 0;
     Bitmap bitmap;
+    bool isVisible = true;
 };
 
 #endif

@@ -134,6 +134,9 @@ void ImageWidget::initializeGL()
 {
     initializeOpenGLFunctions();
 
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     updateTextures();
 
     QOpenGLShader *vertShader = new QOpenGLShader(QOpenGLShader::Vertex, this);
@@ -187,42 +190,44 @@ void ImageWidget::paintGL()
 {
     QOpenGLBuffer vbo;
 
+    glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+
     for (const Layer& layer : qAsConst(layers)) {
-        GLfloat xRatio = (GLfloat)scaleFactor * (GLfloat)layer.bitmap.width / (GLfloat)width();
-        GLfloat yRatio = (GLfloat)scaleFactor * (GLfloat)layer.bitmap.height / (GLfloat)height();
-        GLfloat scaledOffsetX = (GLfloat)offsetX * 2 / (GLfloat)width();
-        GLfloat scaledOffsetY = (GLfloat)offsetY * 2 / (GLfloat)height();
-        GLfloat vertData[24] = {
-            -xRatio + scaledOffsetX, -yRatio - scaledOffsetY, 0, 1,
-            +xRatio + scaledOffsetX, -yRatio - scaledOffsetY, 1, 1,
-            +xRatio + scaledOffsetX, +yRatio - scaledOffsetY, 1, 0,
-            -xRatio + scaledOffsetX, -yRatio - scaledOffsetY, 0, 1,
-            +xRatio + scaledOffsetX, +yRatio - scaledOffsetY, 1, 0,
-            -xRatio + scaledOffsetX, +yRatio - scaledOffsetY, 0, 0,
-        };
-        vbo.create();
-        vbo.bind();
-        vbo.allocate(vertData, 24 * sizeof(GLfloat));
+        if (layer.isVisible) {
+            GLfloat xRatio = (GLfloat)scaleFactor * (GLfloat)layer.bitmap.width / (GLfloat)width();
+            GLfloat yRatio = (GLfloat)scaleFactor * (GLfloat)layer.bitmap.height / (GLfloat)height();
+            GLfloat scaledOffsetX = (GLfloat)offsetX * 2 / (GLfloat)width();
+            GLfloat scaledOffsetY = (GLfloat)offsetY * 2 / (GLfloat)height();
+            GLfloat vertData[24] = {
+                -xRatio + scaledOffsetX, -yRatio - scaledOffsetY, 0, 1,
+                +xRatio + scaledOffsetX, -yRatio - scaledOffsetY, 1, 1,
+                +xRatio + scaledOffsetX, +yRatio - scaledOffsetY, 1, 0,
+                -xRatio + scaledOffsetX, -yRatio - scaledOffsetY, 0, 1,
+                +xRatio + scaledOffsetX, +yRatio - scaledOffsetY, 1, 0,
+                -xRatio + scaledOffsetX, +yRatio - scaledOffsetY, 0, 0,
+            };
+            vbo.create();
+            vbo.bind();
+            vbo.allocate(vertData, 24 * sizeof(GLfloat));
 
-        glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        program->enableAttributeArray(0);
-        program->setAttributeBuffer(
-                0,
-                GL_FLOAT,
-                0,
-                2,
-                4 * sizeof(GLfloat));
-        program->enableAttributeArray(1);
-        program->setAttributeBuffer(
-                1,
-                GL_FLOAT,
-                2 * sizeof(GLfloat),
-                2,
-                4 * sizeof(GLfloat));
-        glBindTexture(GL_TEXTURE_2D, layer.textureId);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+            program->enableAttributeArray(0);
+            program->setAttributeBuffer(
+                    0,
+                    GL_FLOAT,
+                    0,
+                    2,
+                    4 * sizeof(GLfloat));
+            program->enableAttributeArray(1);
+            program->setAttributeBuffer(
+                    1,
+                    GL_FLOAT,
+                    2 * sizeof(GLfloat),
+                    2,
+                    4 * sizeof(GLfloat));
+            glBindTexture(GL_TEXTURE_2D, layer.textureId);
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
     }
 
     update();

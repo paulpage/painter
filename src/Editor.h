@@ -26,9 +26,10 @@
 #include <QScrollArea>
 #include <QScrollBar>
 #include <QSizePolicy>
+#include <QStandardItem>
+#include <QStandardItemModel>
 #include <QStandardPaths>
 #include <QStatusBar>
-#include <QStringListModel>
 
 #define PALLETTE_LENGTH 8
 
@@ -63,7 +64,7 @@ private:
     QButtonGroup *toolGroup;
     QButtonGroup *colorGroup;
     QListView *layerList;
-    QStringListModel *layerListModel;
+    QStandardItemModel *layerListModel;
     Color pallette[PALLETTE_LENGTH] = {
         {255, 0, 0, 255},
         {0, 255, 0, 255},
@@ -78,6 +79,7 @@ private:
     void toolButtonClicked(QAbstractButton *button);
     void colorButtonClicked(QAbstractButton *button);
     void layerListSelectionChanged();
+    void layerListModelUpdated(QStandardItem *item);
 
     void addLayer(Layer layer);
 
