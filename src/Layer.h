@@ -13,12 +13,10 @@ public:
     Layer(int width, int height, QString name = QString("Unnamed Layer"));
     Layer(QImage image, QString name = QString("Unnamed Layer"));
     ~Layer();
-    void updateTexture();
 
     int width;
     int height;
     QString name;
-    GLuint textureId = 0;
     Bitmap bitmap;
     bool isVisible = true;
 };

@@ -1,4 +1,4 @@
-#include <QHBoxLayout>
+#include <QGridLayout>
 #include <QItemSelectionModel>
 
 #include "common.h"
@@ -41,12 +41,13 @@ Editor::Editor()
     QVBoxLayout *toolLayout = new QVBoxLayout(toolWidget);
     toolGroup = new QButtonGroup;
     toolGroup->setExclusive(true);
-    QPushButton *toolButtons[5] = {
+    QPushButton *toolButtons[6] = {
         new QPushButton("Pencil"),
         new QPushButton("Paintbrush"),
         new QPushButton("Color Picker"),
         new QPushButton("Paint Bucket"),
         new QPushButton("Spray Can"),
+        new QPushButton("Eraser"),
     };
     for (int i = 0; i < FINAL_TOOL_COUNT; i++) {
         toolLayout->addWidget(toolButtons[i]);
@@ -63,28 +64,32 @@ Editor::Editor()
     // Colors
     QDockWidget *rightDock = new QDockWidget;
     QWidget *rightContent = new QWidget;
-    QWidget *colorWidget = new QFrame;
-    QVBoxLayout *colorLayout = new QVBoxLayout(colorWidget);
+    QWidget *rightWidget = new QFrame;
+    QGridLayout *colorLayout = new QGridLayout(rightWidget);
+    colorLayout->setHorizontalSpacing(2);
+    colorLayout->setVerticalSpacing(2);
     colorGroup = new QButtonGroup;
     colorGroup->setExclusive(true);
 
     QPushButton *colorButtons[PALLETTE_LENGTH];
     for (int i = 0; i < PALLETTE_LENGTH; i++) {
         colorButtons[i] = new QPushButton;
+        /* colorButtons[i]->setFlat(true); */
+        colorButtons[i]->setFixedSize(QSize(colorButtons[i]->sizeHint().height(), colorButtons[i]->sizeHint().height()));
 
         QPixmap pixmap(64, 64);
         pixmap.fill(QColor(pallette[i].r, pallette[i].g, pallette[i].b, pallette[i].a));
         QIcon icon(pixmap);
         colorButtons[i]->setIcon(icon);
 
-        colorLayout->addWidget(colorButtons[i]);
+        colorLayout->addWidget(colorButtons[i], i % 2, i / 2);
         colorGroup->addButton(colorButtons[i], i);
         colorButtons[i]->setCheckable(true);
     }
     colorButtons[0]->setChecked(true);
     connect(colorGroup, QOverload<QAbstractButton *>::of(&QButtonGroup::buttonClicked), this, &Editor::colorButtonClicked);
     QVBoxLayout *rightLayout = new QVBoxLayout(rightContent);
-    rightLayout->addWidget(colorWidget);
+    rightLayout->addWidget(rightWidget);
     rightLayout->setAlignment(Qt::AlignTop);
     rightDock->setWidget(rightContent);
 
@@ -101,7 +106,7 @@ Editor::Editor()
     connect(layerList->selectionModel(), &QItemSelectionModel::selectionChanged, this, &Editor::layerListSelectionChanged);
     connect(layerListModel, &QStandardItemModel::itemChanged, this, &Editor::layerListModelUpdated);
 
-    colorLayout->addWidget(layerList);
+    rightLayout->addWidget(layerList);
     
     setCentralWidget(imageWidget);
     addDockWidget(Qt::LeftDockWidgetArea, leftDock);
@@ -177,6 +182,7 @@ void Editor::layerListSelectionChanged()
 void Editor::layerListModelUpdated(QStandardItem *item)
 {
     imageWidget->layers[item->row()].isVisible = (item->checkState() == Qt::Checked);
+    imageWidget->updateTextures();
 }
 
 void Editor::newFile()
@@ -234,10 +240,10 @@ void Editor::save()
         }
         if (write) {
             QImage image(
-                    imageWidget->layers.first().bitmap.data,
-                    imageWidget->layers.first().bitmap.width,
-                    imageWidget->layers.first().bitmap.height,
-                    imageWidget->layers.first().bitmap.width * 4,
+                    imageWidget->bitmap.data,
+                    imageWidget->bitmap.width,
+                    imageWidget->bitmap.height,
+                    imageWidget->bitmap.width * 4,
                     QImage::Format_RGBA8888,
                     nullptr,
                     nullptr);

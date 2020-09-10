@@ -175,11 +175,36 @@ void ImageWidget::initializeGL()
 
 void ImageWidget::updateTextures() {
     if (isValid()) {
+        bitmap_free(&bitmap);
+        bitmap = bitmap_create(layers.first().width, layers.first().height);
+        Color color;
         for (Layer& layer : layers) {
-            layer.updateTexture();
+            if (layer.isVisible) {
+                for (int y = 0; y < layer.height; y++) {
+                    for (int x = 0; x < layer.width; x++) {
+                        if (bitmap_get_pixel(&layer.bitmap, x, y, &color)) {
+                            bitmap_blend_pixel(&bitmap, x, y, color);
+                        }
+                    }
+                }
+            }
         }
-    } else {
-        printf("is not valid\n");
+
+        glEnable(GL_TEXTURE_2D);
+
+        glDeleteTextures(1, &textureId); // This is safe to do because glDeleteTextures ignores 0
+        glGenTextures(1, &textureId);
+        glBindTexture(GL_TEXTURE_2D, textureId);
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+        glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+        QImage image(bitmap.data, bitmap.width, bitmap.height, bitmap.width * 4, QImage::Format_RGBA8888, nullptr, nullptr);
+
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image.width(), image.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, image.bits());
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+        glDisable(GL_TEXTURE_2D);
     }
 }
 
@@ -190,42 +215,38 @@ void ImageWidget::paintGL()
     glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    for (const Layer& layer : qAsConst(layers)) {
-        if (layer.isVisible) {
-            GLfloat xRatio = (GLfloat)scaleFactor * (GLfloat)layer.bitmap.width / (GLfloat)width();
-            GLfloat yRatio = (GLfloat)scaleFactor * (GLfloat)layer.bitmap.height / (GLfloat)height();
-            GLfloat scaledOffsetX = (GLfloat)offsetX * 2 / (GLfloat)width();
-            GLfloat scaledOffsetY = (GLfloat)offsetY * 2 / (GLfloat)height();
-            GLfloat vertData[24] = {
-                -xRatio + scaledOffsetX, -yRatio - scaledOffsetY, 0, 1,
-                +xRatio + scaledOffsetX, -yRatio - scaledOffsetY, 1, 1,
-                +xRatio + scaledOffsetX, +yRatio - scaledOffsetY, 1, 0,
-                -xRatio + scaledOffsetX, -yRatio - scaledOffsetY, 0, 1,
-                +xRatio + scaledOffsetX, +yRatio - scaledOffsetY, 1, 0,
-                -xRatio + scaledOffsetX, +yRatio - scaledOffsetY, 0, 0,
-            };
-            vbo.create();
-            vbo.bind();
-            vbo.allocate(vertData, 24 * sizeof(GLfloat));
+    GLfloat xRatio = (GLfloat)scaleFactor * (GLfloat)layers.first().bitmap.width / (GLfloat)width();
+    GLfloat yRatio = (GLfloat)scaleFactor * (GLfloat)layers.first().bitmap.height / (GLfloat)height();
+    GLfloat scaledOffsetX = (GLfloat)offsetX * 2 / (GLfloat)width();
+    GLfloat scaledOffsetY = (GLfloat)offsetY * 2 / (GLfloat)height();
+    GLfloat vertData[24] = {
+        -xRatio + scaledOffsetX, -yRatio - scaledOffsetY, 0, 1,
+        +xRatio + scaledOffsetX, -yRatio - scaledOffsetY, 1, 1,
+        +xRatio + scaledOffsetX, +yRatio - scaledOffsetY, 1, 0,
+        -xRatio + scaledOffsetX, -yRatio - scaledOffsetY, 0, 1,
+        +xRatio + scaledOffsetX, +yRatio - scaledOffsetY, 1, 0,
+        -xRatio + scaledOffsetX, +yRatio - scaledOffsetY, 0, 0,
+    };
+    vbo.create();
+    vbo.bind();
+    vbo.allocate(vertData, 24 * sizeof(GLfloat));
 
-            program->enableAttributeArray(0);
-            program->setAttributeBuffer(
-                    0,
-                    GL_FLOAT,
-                    0,
-                    2,
-                    4 * sizeof(GLfloat));
-            program->enableAttributeArray(1);
-            program->setAttributeBuffer(
-                    1,
-                    GL_FLOAT,
-                    2 * sizeof(GLfloat),
-                    2,
-                    4 * sizeof(GLfloat));
-            glBindTexture(GL_TEXTURE_2D, layer.textureId);
-            glDrawArrays(GL_TRIANGLES, 0, 6);
-        }
-    }
+    program->enableAttributeArray(0);
+    program->setAttributeBuffer(
+            0,
+            GL_FLOAT,
+            0,
+            2,
+            4 * sizeof(GLfloat));
+    program->enableAttributeArray(1);
+    program->setAttributeBuffer(
+            1,
+            GL_FLOAT,
+            2 * sizeof(GLfloat),
+            2,
+            4 * sizeof(GLfloat));
+    glBindTexture(GL_TEXTURE_2D, textureId);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
 
     update();
 }
@@ -288,6 +309,20 @@ void ImageWidget::applyTools()
                     timer->start();
                 }
                 break;
+            case TOOL_ERASER:
+                for (int y = -5; y < 5; y++) {
+                    for (int x = -5; x < 5; x++) {
+                        if (sqrt((double)(x * x) + (double)(y * y)) < 5.0f) {
+                            bitmap_draw_line(
+                                    &selectedLayer->bitmap,
+                                    lastPixelPosition.x() + x,
+                                    lastPixelPosition.y() + y,
+                                    pixelPosition.x() + x,
+                                    pixelPosition.y() + y,
+                                    Color { 0, 0, 0, 0 });
+                        }
+                    }
+                }
             default:
                 break;
         }

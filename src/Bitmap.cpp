@@ -1,4 +1,5 @@
 #include "Bitmap.h"
+#include "common.h"
 
 #include <cstdlib>
 #include <cstdio>
@@ -101,13 +102,40 @@ bool bitmap_get_pixel(Bitmap *bitmap, int x, int y, Color *color)
 
 bool bitmap_draw_pixel(Bitmap *bitmap, int x, int y, Color color)
 {
-    int w = bitmap->width;
-    int h = bitmap->height;
-    if (x >= 0 && x < w && y >= 0 && y < h)  {
-        bitmap->data[(y * w + x) * 4] = color.r;
-        bitmap->data[(y * w + x) * 4 + 1] = color.g;
-        bitmap->data[(y * w + x) * 4 + 2] = color.b;
-        bitmap->data[(y * w + x) * 4 + 3] = color.a;
+    int offset = (y * bitmap->width + x) * 4;
+    if (x >= 0 && x < bitmap->width && y >= 0 && y < bitmap->height)  {
+        bitmap->data[offset] = color.r;
+        bitmap->data[offset + 1] = color.g;
+        bitmap->data[offset + 2] = color.b;
+        bitmap->data[offset + 3] = color.a;
+        return true;
+    }
+    return false;
+}
+
+bool bitmap_blend_pixel(Bitmap *bitmap, int x, int y, Color color)
+{
+    if (x >= 0 && x < bitmap->width && y >= 0 && y < bitmap->height)  {
+        int offset = (y * bitmap->width + x) * 4;
+        Color sourceColor = Color {
+            bitmap->data[offset],
+            bitmap->data[offset + 1],
+            bitmap->data[offset + 2],
+            bitmap->data[offset + 3],
+        };
+        double sFactor = (double)sourceColor.a / 255.0f;
+        double dFactor = 1.0f - (double)sourceColor.a / 255.0f;
+        Color destColor = Color {
+            (unsigned char)MIN(255.0f, sourceColor.r * sFactor + color.r * dFactor),
+            (unsigned char)MIN(255.0f, sourceColor.g * sFactor + color.g * dFactor),
+            (unsigned char)MIN(255.0f, sourceColor.b * sFactor + color.b * dFactor),
+            (unsigned char)MIN(255.0f, sourceColor.a * sFactor + color.a * dFactor),
+        };
+
+        bitmap->data[offset] = destColor.r;
+        bitmap->data[offset + 1] = destColor.g;
+        bitmap->data[offset + 2] = destColor.b;
+        bitmap->data[offset + 3] = destColor.a;
         return true;
     }
     return false;

@@ -51,6 +51,8 @@ public:
     void initializeGL() override;
     void paintGL() override;
     void resizeGL(int width, int height) override;
+    void updateTextures();
+    Bitmap bitmap = bitmap_create(0, 0);
 
     Layer *selectedLayer;
     QVector<Layer> layers;
@@ -72,9 +74,10 @@ private:
     bool isMiddleButtonDown = false;
     bool isLeftButtonDown = false;
     QOpenGLShaderProgram *program;
+    GLuint textureId = 0;
+
 
     void useSprayCan();
-    void updateTextures();
     void applyTools();
 };
 
