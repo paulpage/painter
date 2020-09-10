@@ -177,16 +177,9 @@ void ImageWidget::updateTextures() {
     if (isValid()) {
         bitmap_free(&bitmap);
         bitmap = bitmap_create(layers.first().width, layers.first().height);
-        Color color;
         for (Layer& layer : layers) {
             if (layer.isVisible) {
-                for (int y = 0; y < layer.height; y++) {
-                    for (int x = 0; x < layer.width; x++) {
-                        if (bitmap_get_pixel(&layer.bitmap, x, y, &color)) {
-                            bitmap_blend_pixel(&bitmap, x, y, color);
-                        }
-                    }
-                }
+                bitmap_blend(&bitmap, &layer.bitmap);
             }
         }
 

@@ -113,29 +113,32 @@ bool bitmap_draw_pixel(Bitmap *bitmap, int x, int y, Color color)
     return false;
 }
 
-bool bitmap_blend_pixel(Bitmap *bitmap, int x, int y, Color color)
+bool bitmap_blend(Bitmap *bitmap, Bitmap *other)
 {
-    if (x >= 0 && x < bitmap->width && y >= 0 && y < bitmap->height)  {
-        int offset = (y * bitmap->width + x) * 4;
-        Color sourceColor = Color {
-            bitmap->data[offset],
-            bitmap->data[offset + 1],
-            bitmap->data[offset + 2],
-            bitmap->data[offset + 3],
-        };
-        double sFactor = (double)sourceColor.a / 255.0f;
-        double dFactor = 1.0f - (double)sourceColor.a / 255.0f;
-        Color destColor = Color {
-            (unsigned char)MIN(255.0f, sourceColor.r * sFactor + color.r * dFactor),
-            (unsigned char)MIN(255.0f, sourceColor.g * sFactor + color.g * dFactor),
-            (unsigned char)MIN(255.0f, sourceColor.b * sFactor + color.b * dFactor),
-            (unsigned char)MIN(255.0f, sourceColor.a * sFactor + color.a * dFactor),
-        };
+    if (bitmap->width == other->width && bitmap->height == other->height) {
+        int size = bitmap->height * bitmap->width * 4;
+        for (int i = 0; i < size; i += 4) {
+            // The common cases are 0 or full alpha, so make those fast
+            if (other->data[i + 3] == 0) {
+                continue;
+            }
+            if (other->data[i + 3] == 255) {
+                bitmap->data[i] = other->data[i];
+                bitmap->data[i + 1] = other->data[i + 1];
+                bitmap->data[i + 2] = other->data[i + 2];
+                bitmap->data[i + 3] = other->data[i + 3];
+                continue;
+            }
 
-        bitmap->data[offset] = destColor.r;
-        bitmap->data[offset + 1] = destColor.g;
-        bitmap->data[offset + 2] = destColor.b;
-        bitmap->data[offset + 3] = destColor.a;
+            // Uncommon case (normal blending)
+            double a1 = (double)other->data[i + 3] / 255.0f;
+            double a2 = (double)bitmap->data[i + 3] / 255.0f;
+            double factor = a2 * (1.0f - a1);
+            bitmap->data[i]     = (unsigned char)((double)bitmap->data[i]     * a1 + (double)other->data[i]     * factor) / (a1 + factor);
+            bitmap->data[i + 1] = (unsigned char)((double)bitmap->data[i + 1] * a1 + (double)other->data[i + 1] * factor) / (a1 + factor);
+            bitmap->data[i + 2] = (unsigned char)((double)bitmap->data[i + 2] * a1 + (double)other->data[i + 2] * factor) / (a1 + factor);
+            bitmap->data[i + 3] = (unsigned char)((a1 + factor) * 255.0f);
+        }
         return true;
     }
     return false;
