@@ -12,6 +12,7 @@ Layer::Layer(int width, int height, QString name): width(width), height(height),
 Layer::Layer(QImage image, QString name): name(name)
 {
     /* texture = new QOpenGLTexture(image); */
+    image = image.convertToFormat(QImage::Format_RGBA8888);
     width = image.width();
     height = image.height();
     bitmap = bitmap_create(width, height);

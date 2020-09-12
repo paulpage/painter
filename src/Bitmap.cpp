@@ -115,29 +115,38 @@ bool bitmap_draw_pixel(Bitmap *bitmap, int x, int y, Color color)
 
 bool bitmap_blend(Bitmap *bitmap, Bitmap *other)
 {
-    if (bitmap->width == other->width && bitmap->height == other->height) {
-        int size = bitmap->height * bitmap->width * 4;
-        for (int i = 0; i < size; i += 4) {
-            // The common cases are 0 or full alpha, so make those fast
-            if (other->data[i + 3] == 0) {
-                continue;
-            }
-            if (other->data[i + 3] == 255) {
-                bitmap->data[i] = other->data[i];
-                bitmap->data[i + 1] = other->data[i + 1];
-                bitmap->data[i + 2] = other->data[i + 2];
-                bitmap->data[i + 3] = other->data[i + 3];
-                continue;
-            }
+    // Only blend the portion of the other bitmap that overlaps with the base
+    int offsetX = 0;
+    int offsetY = 0;
+    int width = MIN(other->width, bitmap->width - offsetX);
+    int height = MIN(other->height, bitmap->height - offsetY);
+    if (bitmap->width >= other->width && bitmap->height >= other->height) {
+        for (int y = offsetY; y < height; y++) {
+            for (int x = offsetX; x < width; x++) {
+                int i = (y * bitmap->width + x) * 4;
+                int oi = ((y - offsetY) * width + (x - offsetX)) * 4;
 
-            // Uncommon case (normal blending)
-            double a1 = (double)other->data[i + 3] / 255.0f;
-            double a2 = (double)bitmap->data[i + 3] / 255.0f;
-            double factor = a2 * (1.0f - a1);
-            bitmap->data[i]     = (unsigned char)((double)bitmap->data[i]     * a1 + (double)other->data[i]     * factor) / (a1 + factor);
-            bitmap->data[i + 1] = (unsigned char)((double)bitmap->data[i + 1] * a1 + (double)other->data[i + 1] * factor) / (a1 + factor);
-            bitmap->data[i + 2] = (unsigned char)((double)bitmap->data[i + 2] * a1 + (double)other->data[i + 2] * factor) / (a1 + factor);
-            bitmap->data[i + 3] = (unsigned char)((a1 + factor) * 255.0f);
+                // The common cases are 0 or full alpha, so make those fast
+                if (other->data[oi + 3] == 0) {
+                    continue;
+                }
+                if (other->data[oi + 3] == 255) {
+                    bitmap->data[i] = other->data[oi];
+                    bitmap->data[i + 1] = other->data[oi + 1];
+                    bitmap->data[i + 2] = other->data[oi + 2];
+                    bitmap->data[i + 3] = other->data[oi + 3];
+                    continue;
+                }
+
+                // Uncommon case (normal blending)
+                double a1 = (double)other->data[oi + 3] / 255.0f;
+                double a2 = (double)bitmap->data[i + 3] / 255.0f;
+                double factor = a2 * (1.0f - a1);
+                bitmap->data[i]     = (unsigned char)((double)bitmap->data[i]     * a1 + (double)other->data[oi]     * factor) / (a1 + factor);
+                bitmap->data[i + 1] = (unsigned char)((double)bitmap->data[i + 1] * a1 + (double)other->data[oi + 1] * factor) / (a1 + factor);
+                bitmap->data[i + 2] = (unsigned char)((double)bitmap->data[i + 2] * a1 + (double)other->data[oi + 2] * factor) / (a1 + factor);
+                bitmap->data[i + 3] = (unsigned char)((a1 + factor) * 255.0f);
+            }
         }
         return true;
     }

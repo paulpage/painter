@@ -1,5 +1,7 @@
 #include <QGridLayout>
 #include <QItemSelectionModel>
+#include <QClipboard>
+#include <QApplication>
 
 #include "common.h"
 #include "Editor.h"
@@ -198,6 +200,10 @@ void Editor::newFile()
     zoomOutAction->setEnabled(true);
     saveAction->setEnabled(true);
     saveAsAction->setEnabled(true);
+
+    cutAction->setEnabled(true);
+    copyAction->setEnabled(true);
+    pasteAction->setEnabled(true);
 }
 
 void Editor::open()
@@ -274,6 +280,12 @@ void Editor::copy()
 
 void Editor::paste()
 {
+    QClipboard *clipboard = QApplication::clipboard();
+    QImage image = clipboard->image();
+    if (!image.isNull()) {
+        Layer layer(image);
+        addLayer(layer);
+    }
 }
 
 void Editor::zoomIn()
