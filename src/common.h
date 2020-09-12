@@ -8,6 +8,8 @@ enum Tool {
     TOOL_PAINT_BUCKET,
     TOOL_SPRAY_CAN,
     TOOL_ERASER,
+    TOOL_MOVE,
+    TOOL_RECTANGLE_SELECT,
 
     FINAL_TOOL_COUNT, // Marks the end of the enum
 };

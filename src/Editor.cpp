@@ -43,13 +43,15 @@ Editor::Editor()
     QVBoxLayout *toolLayout = new QVBoxLayout(toolWidget);
     toolGroup = new QButtonGroup;
     toolGroup->setExclusive(true);
-    QPushButton *toolButtons[6] = {
+    QPushButton *toolButtons[FINAL_TOOL_COUNT] = {
         new QPushButton("Pencil"),
         new QPushButton("Paintbrush"),
         new QPushButton("Color Picker"),
         new QPushButton("Paint Bucket"),
         new QPushButton("Spray Can"),
         new QPushButton("Eraser"),
+        new QPushButton("Move"),
+        new QPushButton("Rectangle Select"),
     };
     for (int i = 0; i < FINAL_TOOL_COUNT; i++) {
         toolLayout->addWidget(toolButtons[i]);
@@ -178,7 +180,7 @@ void Editor::colorButtonClicked(QAbstractButton *button)
 void Editor::layerListSelectionChanged()
 {
     int i = layerList->selectionModel()->selectedIndexes().first().row();
-    imageWidget->selectedLayer = &imageWidget->layers[i];
+    imageWidget->activeLayer = &imageWidget->layers[i];
 }
 
 void Editor::layerListModelUpdated(QStandardItem *item)
@@ -284,6 +286,8 @@ void Editor::paste()
     QImage image = clipboard->image();
     if (!image.isNull()) {
         Layer layer(image);
+        layer.x = 100;
+        layer.y = 100;
         addLayer(layer);
     }
 }
@@ -331,7 +335,7 @@ void Editor::addLayer(Layer layer)
     /*     layerNames << layer.name; */
     /* } */
     /* layerListModel->setStringList(layerNames); */
-    imageWidget->selectedLayer = &imageWidget->layers.last();
+    imageWidget->activeLayer = &imageWidget->layers.last();
 }
 
 Editor::~Editor()

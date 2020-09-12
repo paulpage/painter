@@ -54,7 +54,7 @@ public:
     void updateTextures();
     Bitmap bitmap = bitmap_create(0, 0);
 
-    Layer *selectedLayer;
+    Layer *activeLayer;
     QVector<Layer> layers;
     Tool activeTool = TOOL_PENCIL;
     Color activeColor = {255, 0, 0, 255};
@@ -78,7 +78,7 @@ private:
 
 
     void useSprayCan();
-    void applyTools();
+    void applyTools(QMouseEvent *event);
 };
 
 #endif

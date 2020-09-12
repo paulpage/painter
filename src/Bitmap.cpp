@@ -113,18 +113,16 @@ bool bitmap_draw_pixel(Bitmap *bitmap, int x, int y, Color color)
     return false;
 }
 
-bool bitmap_blend(Bitmap *bitmap, Bitmap *other)
+bool bitmap_blend(Bitmap *bitmap, Bitmap *other, int offset_x, int offset_y)
 {
     // Only blend the portion of the other bitmap that overlaps with the base
-    int offsetX = 0;
-    int offsetY = 0;
-    int width = MIN(other->width, bitmap->width - offsetX);
-    int height = MIN(other->height, bitmap->height - offsetY);
+    int width = MIN(other->width, bitmap->width - offset_x);
+    int height = MIN(other->height, bitmap->height - offset_y);
     if (bitmap->width >= other->width && bitmap->height >= other->height) {
-        for (int y = offsetY; y < height; y++) {
-            for (int x = offsetX; x < width; x++) {
+        for (int y = offset_y; y < offset_y + height; y++) {
+            for (int x = offset_x; x < offset_x + width; x++) {
                 int i = (y * bitmap->width + x) * 4;
-                int oi = ((y - offsetY) * width + (x - offsetX)) * 4;
+                int oi = ((y - offset_y) * width + (x - offset_x)) * 4;
 
                 // The common cases are 0 or full alpha, so make those fast
                 if (other->data[oi + 3] == 0) {

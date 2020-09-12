@@ -14,6 +14,8 @@ public:
     Layer(QImage image, QString name = QString("Unnamed Layer"));
     ~Layer();
 
+    int x = 0;
+    int y = 0;
     int width;
     int height;
     QString name;

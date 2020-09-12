@@ -96,7 +96,7 @@ void ImageWidget::mousePressEvent(QMouseEvent *event) {
     isMiddleButtonDown = ((event->button() & Qt::MidButton) == Qt::MidButton);
     isLeftButtonDown = ((event->button() & Qt::LeftButton) == Qt::LeftButton);
 
-    applyTools();
+    applyTools(event);
 
     updateTextures();
     event->accept();
@@ -120,7 +120,7 @@ void ImageWidget::mouseMoveEvent(QMouseEvent *event)
         offsetY += diff.y();
     }
 
-    applyTools();
+    applyTools(event);
 
     lastMousePosition = mousePosition;
     mousePosition = event->globalPos();
@@ -179,7 +179,7 @@ void ImageWidget::updateTextures() {
         bitmap = bitmap_create(layers.first().width, layers.first().height);
         for (Layer& layer : layers) {
             if (layer.isVisible) {
-                bitmap_blend(&bitmap, &layer.bitmap);
+                bitmap_blend(&bitmap, &layer.bitmap, layer.x, layer.y);
             }
         }
 
@@ -253,15 +253,15 @@ ImageWidget::~ImageWidget()
 {
 }
 
-void ImageWidget::applyTools()
+void ImageWidget::applyTools(QMouseEvent *event)
 {
     if (isLeftButtonDown) {
-        QPoint lastPixelPosition = globalToLayer(selectedLayer, lastMousePosition);
-        QPoint pixelPosition = globalToLayer(selectedLayer, mousePosition);
+        QPoint lastPixelPosition = globalToLayer(activeLayer, lastMousePosition);
+        QPoint pixelPosition = globalToLayer(activeLayer, mousePosition);
         switch (activeTool) {
             case TOOL_PENCIL:
                 bitmap_draw_line(
-                        &selectedLayer->bitmap,
+                        &activeLayer->bitmap,
                         lastPixelPosition.x(),
                         lastPixelPosition.y(),
                         pixelPosition.x(),
@@ -273,7 +273,7 @@ void ImageWidget::applyTools()
                     for (int x = -5; x < 5; x++) {
                         if (sqrt((double)(x * x) + (double)(y * y)) < 5.0f) {
                             bitmap_draw_line(
-                                    &selectedLayer->bitmap,
+                                    &activeLayer->bitmap,
                                     lastPixelPosition.x() + x,
                                     lastPixelPosition.y() + y,
                                     pixelPosition.x() + x,
@@ -285,14 +285,14 @@ void ImageWidget::applyTools()
                 break;
             case TOOL_COLOR_PICKER:
                 Color color;
-                if (bitmap_get_pixel(&selectedLayer->bitmap, pixelPosition.x(), pixelPosition.y(), &color)) {
+                if (bitmap_get_pixel(&activeLayer->bitmap, pixelPosition.x(), pixelPosition.y(), &color)) {
                     activeColor = color;
                     emit sendColorChanged(color);
                 }
                 break;
             case TOOL_PAINT_BUCKET:
                         bitmap_fill(
-                                &selectedLayer->bitmap,
+                                &activeLayer->bitmap,
                                 pixelPosition.x(),
                                 pixelPosition.y(),
                                 activeColor);
@@ -307,7 +307,7 @@ void ImageWidget::applyTools()
                     for (int x = -5; x < 5; x++) {
                         if (sqrt((double)(x * x) + (double)(y * y)) < 5.0f) {
                             bitmap_draw_line(
-                                    &selectedLayer->bitmap,
+                                    &activeLayer->bitmap,
                                     lastPixelPosition.x() + x,
                                     lastPixelPosition.y() + y,
                                     pixelPosition.x() + x,
@@ -316,6 +316,16 @@ void ImageWidget::applyTools()
                         }
                     }
                 }
+                break;
+            case TOOL_MOVE:
+                {
+                    QPoint diff = event->globalPos() - mousePosition;
+                    activeLayer->x += diff.x();
+                    activeLayer->y += diff.y();
+                }
+                break;
+            case TOOL_RECTANGLE_SELECT:
+                break;
             default:
                 break;
         }
@@ -326,14 +336,14 @@ void ImageWidget::applyTools()
 
 void ImageWidget::useSprayCan()
 {
-    QPoint pixelPosition = globalToLayer(selectedLayer, mousePosition);
+    QPoint pixelPosition = globalToLayer(activeLayer, mousePosition);
     int x = pixelPosition.x();
     int y = pixelPosition.y();
     for (int i = 0; i < 20; i++) {
         int dx = QRandomGenerator::global()->bounded(-20, 20);
         int dy = QRandomGenerator::global()->bounded(-20, 20);
         if (sqrt((double)(dx * dx) + (double)(dy * dy)) < 20.0f) {
-            bitmap_draw_pixel(&selectedLayer->bitmap, x + dx, y + dy, activeColor);
+            bitmap_draw_pixel(&activeLayer->bitmap, x + dx, y + dy, activeColor);
         }
     }
     updateTextures();
