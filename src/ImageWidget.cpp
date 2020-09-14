@@ -349,3 +349,26 @@ void ImageWidget::useSprayCan()
     updateTextures();
     update();
 }
+
+void ImageWidget::rotate(int degrees)
+{
+    /* switch (degrees) { */
+    /*     case 90: */
+    /*         { */
+    /*             for (Layer& layer : layers) { */
+    /*                 Layer newLayer(layer.height, layer.width, layer.name); */
+    /*                 newLayer.x = layer.height - (layer.x; */
+    /*                 newLayer.y = ; */
+    /*                 Bitmap newBitmap = bitmap_create(layer.height, layer.width); */
+    /*                 if (layer.isVisible) { */
+    /*                     bitmap_blend(&bitmap, &layer.bitmap, layer.x, layer.y); */
+    /*                 } */
+    /*             } */
+    /*             for ( */
+    /*             for (int i = */ 
+    /*         } */
+    /*         break; */
+    /*     default: */
+    /*         break; */
+    /* } */
+}

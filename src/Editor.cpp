@@ -78,7 +78,7 @@ Editor::Editor()
     QPushButton *colorButtons[PALLETTE_LENGTH];
     for (int i = 0; i < PALLETTE_LENGTH; i++) {
         colorButtons[i] = new QPushButton;
-        /* colorButtons[i]->setFlat(true); */
+        colorButtons[i]->setFlat(true);
         colorButtons[i]->setFixedSize(QSize(colorButtons[i]->sizeHint().height(), colorButtons[i]->sizeHint().height()));
 
         QPixmap pixmap(64, 64);
@@ -158,6 +158,8 @@ Editor::Editor()
     zoomOutAction->setEnabled(false);
 
     QMenu *imageMenu = menuBar()->addMenu(tr("&Image"));
+    rotateAction = imageMenu->addAction(tr("Rotate 90 degrees"), this, &Editor::rotate);
+    rotateAction->setEnabled(false);
 
     newFile();
 }
@@ -206,6 +208,8 @@ void Editor::newFile()
     cutAction->setEnabled(true);
     copyAction->setEnabled(true);
     pasteAction->setEnabled(true);
+
+    rotateAction->setEnabled(true);
 }
 
 void Editor::open()
@@ -308,6 +312,11 @@ void Editor::normalSize()
 
 void Editor::fitToWindow()
 {
+}
+
+void Editor::rotate()
+{
+    imageWidget->rotate(90);
 }
 
 void Editor::setActiveColor(Color color)

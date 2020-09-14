@@ -55,6 +55,7 @@ private slots:
     void zoomOut();
     void normalSize();
     void fitToWindow();
+    void rotate();
 
     void setActiveColor(Color color);
 
@@ -117,5 +118,6 @@ private:
     QAction *zoomOutAction;
     QAction *normalSizeAction;
     QAction *fitToWindowAction;
+    QAction *rotateAction;
 };
 #endif // MAINWINDOW_H
