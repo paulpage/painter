@@ -331,6 +331,10 @@ void Editor::setActiveColor(Color color)
 
 void Editor::addLayer(Layer layer)
 {
+    if (imageWidget->layers.size() == 0) {
+        imageWidget->canvasWidth = layer.width;
+        imageWidget->canvasHeight = layer.height;
+    }
     imageWidget->layers.append(layer);
     QStandardItem *item = new QStandardItem();
     item->setText(layer.name);
@@ -339,12 +343,9 @@ void Editor::addLayer(Layer layer)
     item->setUserTristate(false);
     item->setEditable(true); // TODO change layer name based on editing
     layerListModel->setItem(layerListModel->rowCount(), item);
-    /* QStringList layerNames; */
-    /* for (const Layer& layer : imageWidget->layers) { */
-    /*     layerNames << layer.name; */
-    /* } */
-    /* layerListModel->setStringList(layerNames); */
     imageWidget->activeLayer = &imageWidget->layers.last();
+    // TODO figure out the right syntax to select the new layer
+    /* layerList->selectionModel()->select(layerListModel->rowCount() - 1, QItemSelectionModel::SelectCurrent); */
 }
 
 Editor::~Editor()

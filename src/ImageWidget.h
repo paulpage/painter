@@ -40,7 +40,7 @@ public:
     ImageWidget(QWidget *parent);
     ~ImageWidget();
 
-    QPoint globalToLayer(Layer *layer, QPoint g);
+    QPoint globalToCanvas(QPoint g);
     void adjustScrollBar(QScrollBar *scrollBar, double factor);
     bool loadFile(QString fileName);
     void scaleImage(double factor);
@@ -59,6 +59,8 @@ public:
     QVector<Layer> layers;
     Tool activeTool = TOOL_PENCIL;
     Color activeColor = {255, 0, 0, 255};
+    int canvasWidth = 0;
+    int canvasHeight = 0;
 
 signals:
     void sendColorChanged(Color color);
@@ -76,7 +78,6 @@ private:
     bool isLeftButtonDown = false;
     QOpenGLShaderProgram *program;
     GLuint textureId = 0;
-
 
     void useSprayCan();
     void applyTools(QMouseEvent *event);

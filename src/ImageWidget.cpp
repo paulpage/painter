@@ -14,15 +14,17 @@ ImageWidget::ImageWidget(QWidget *parent)
     connect(this, SIGNAL(sendColorChanged(Color)), parent, SLOT(setActiveColor(Color)));
 }
 
-QPoint ImageWidget::globalToLayer(Layer *layer, QPoint g)
+QPoint ImageWidget::globalToCanvas(QPoint g)
 {
     QPoint base = g - mapToGlobal(QPoint(0, 0));
-    double layerWidth = scaleFactor * (double)layer->width;
+    /* double layerWidth = scaleFactor * (double)layer->width; */
+    double layerWidth = scaleFactor * canvasWidth;
     double layerStartX = (double)width() / 2 - layerWidth / 2 + offsetX;
     double screenDistanceX = (double)base.x() - layerStartX;
     int bx = (int)(screenDistanceX / scaleFactor);
 
-    double layerHeight = scaleFactor * (double)layer->height;
+    /* double layerHeight = scaleFactor * (double)layer->height; */
+    double layerHeight = scaleFactor * canvasHeight;
     double layerStartY = (double)height() / 2 - layerHeight / 2 + offsetY;
     double screenDistanceY = (double)base.y() - layerStartY;
     int by = (int)(screenDistanceY / scaleFactor);
@@ -256,8 +258,11 @@ ImageWidget::~ImageWidget()
 void ImageWidget::applyTools(QMouseEvent *event)
 {
     if (isLeftButtonDown) {
-        QPoint lastPixelPosition = globalToLayer(activeLayer, lastMousePosition);
-        QPoint pixelPosition = globalToLayer(activeLayer, mousePosition);
+        qDebug() << "last" << lastMousePosition;
+        qDebug() << "now" << mousePosition;
+        qDebug() << "global" << event->globalPos();
+        QPoint lastPixelPosition = globalToCanvas(lastMousePosition) - QPoint(activeLayer->x, activeLayer->y);
+        QPoint pixelPosition = globalToCanvas(mousePosition) - QPoint(activeLayer->x, activeLayer->y);
         switch (activeTool) {
             case TOOL_PENCIL:
                 bitmap_draw_line(
@@ -320,8 +325,11 @@ void ImageWidget::applyTools(QMouseEvent *event)
             case TOOL_MOVE:
                 {
                     QPoint diff = event->globalPos() - mousePosition;
-                    activeLayer->x += diff.x();
-                    activeLayer->y += diff.y();
+                    QPoint newPosition = globalToCanvas(event->globalPos() - diff);
+                    activeLayer->x = newPosition.x();
+                    activeLayer->y = newPosition.y();
+                    /* activeLayer->x += (int)((double)diff.x() / scaleFactor); */
+                    /* activeLayer->y += (int)((double)diff.y() / scaleFactor); */
                 }
                 break;
             case TOOL_RECTANGLE_SELECT:
@@ -336,7 +344,7 @@ void ImageWidget::applyTools(QMouseEvent *event)
 
 void ImageWidget::useSprayCan()
 {
-    QPoint pixelPosition = globalToLayer(activeLayer, mousePosition);
+    QPoint pixelPosition = globalToCanvas(mousePosition);
     int x = pixelPosition.x();
     int y = pixelPosition.y();
     for (int i = 0; i < 20; i++) {
