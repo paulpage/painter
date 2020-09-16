@@ -352,23 +352,22 @@ void ImageWidget::useSprayCan()
 
 void ImageWidget::rotate(int degrees)
 {
-    /* switch (degrees) { */
-    /*     case 90: */
-    /*         { */
-    /*             for (Layer& layer : layers) { */
-    /*                 Layer newLayer(layer.height, layer.width, layer.name); */
-    /*                 newLayer.x = layer.height - (layer.x; */
-    /*                 newLayer.y = ; */
-    /*                 Bitmap newBitmap = bitmap_create(layer.height, layer.width); */
-    /*                 if (layer.isVisible) { */
-    /*                     bitmap_blend(&bitmap, &layer.bitmap, layer.x, layer.y); */
-    /*                 } */
-    /*             } */
-    /*             for ( */
-    /*             for (int i = */ 
-    /*         } */
-    /*         break; */
-    /*     default: */
-    /*         break; */
-    /* } */
+    switch (degrees) {
+        case 90:
+            {
+                int oldY = layers[0].height;
+                for (int i = 0; i < layers.size(); i++) {
+                    Layer layer(layers[i].height, layers[i].width, layers[i].name);
+                    Bitmap newBitmap = bitmap_create_rotated(&layers[i].bitmap);
+                    layer.bitmap = newBitmap;
+                    layer.x = oldY - layers[i].y - layers[i].bitmap.height;
+                    layer.y = layers[i].x;
+                    layers[i] = layer;
+                }
+                updateTextures();
+            }
+            break;
+        default:
+            break;
+    }
 }

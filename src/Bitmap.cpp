@@ -81,6 +81,21 @@ Bitmap bitmap_create(int width, int height)
     };
 }
 
+Bitmap bitmap_create_rotated(Bitmap *old) {
+    Bitmap bitmap = bitmap_create(old->height, old->width);
+    for (int y = 0; y < old->height; y++) {
+        for (int x = 0; x < old->width; x++) {
+            int oldOffset = (y * old->width + x) * 4;
+            int offset = (  (old->height - 1 - y) +  (x * old->height)  ) * 4;
+            bitmap.data[offset] = old->data[oldOffset];
+            bitmap.data[offset + 1] = old->data[oldOffset + 1];
+            bitmap.data[offset + 2] = old->data[oldOffset + 2];
+            bitmap.data[offset + 3] = old->data[oldOffset + 3];
+        }
+    }
+    return bitmap;
+}
+
 void bitmap_free(Bitmap *bitmap)
 {
     free(bitmap->data);
