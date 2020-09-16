@@ -134,10 +134,10 @@ bool bitmap_blend(Bitmap *bitmap, Bitmap *other, int offset_x, int offset_y)
     int width = MIN(other->width, bitmap->width - offset_x);
     int height = MIN(other->height, bitmap->height - offset_y);
     if (bitmap->width >= other->width && bitmap->height >= other->height) {
-        for (int y = offset_y; y < offset_y + height; y++) {
-            for (int x = offset_x; x < offset_x + width; x++) {
+        for (int y = MAX(0, offset_y); y < offset_y + height; y++) {
+            for (int x = MAX(0, offset_x); x < MIN(bitmap->width, offset_x + width); x++) {
                 int i = (y * bitmap->width + x) * 4;
-                int oi = ((y - offset_y) * width + (x - offset_x)) * 4;
+                int oi = ((y - offset_y) * other->width + (x - offset_x)) * 4;
 
                 // The common cases are 0 or full alpha, so make those fast
                 if (other->data[oi + 3] == 0) {
