@@ -34,12 +34,13 @@ Editor::Editor()
 {
     qRegisterMetaType<QDockWidget::DockWidgetFeatures>();
 
+    // Widgets
+    // ============================================================
+
     imageWidget = new ImageWidget(this);
 
     // Tools
-    QDockWidget *leftDock = new QDockWidget;
-    QWidget *leftContent = new QWidget;
-    QWidget *toolWidget = new QFrame;
+    QWidget *toolWidget = new QWidget;
     QVBoxLayout *toolLayout = new QVBoxLayout(toolWidget);
     toolGroup = new QButtonGroup;
     toolGroup->setExclusive(true);
@@ -60,16 +61,10 @@ Editor::Editor()
     }
     toolButtons[0]->setChecked(true);
     connect(toolGroup, QOverload<QAbstractButton *>::of(&QButtonGroup::buttonClicked), this, &Editor::toolButtonClicked);
-    QVBoxLayout *leftLayout = new QVBoxLayout(leftContent);
-    leftLayout->addWidget(toolWidget);
-    leftLayout->setAlignment(Qt::AlignTop);
-    leftDock->setWidget(leftContent);
 
     // Colors
-    QDockWidget *rightDock = new QDockWidget;
-    QWidget *rightContent = new QWidget;
-    QWidget *rightWidget = new QFrame;
-    QGridLayout *colorLayout = new QGridLayout(rightWidget);
+    QWidget *colorWidget = new QWidget;
+    QGridLayout *colorLayout = new QGridLayout(colorWidget);
     colorLayout->setHorizontalSpacing(2);
     colorLayout->setVerticalSpacing(2);
     colorGroup = new QButtonGroup;
@@ -86,16 +81,12 @@ Editor::Editor()
         QIcon icon(pixmap);
         colorButtons[i]->setIcon(icon);
 
-        colorLayout->addWidget(colorButtons[i], i % 2, i / 2);
+        colorLayout->addWidget(colorButtons[i], i / 2, i % 2);
         colorGroup->addButton(colorButtons[i], i);
         colorButtons[i]->setCheckable(true);
     }
     colorButtons[0]->setChecked(true);
     connect(colorGroup, QOverload<QAbstractButton *>::of(&QButtonGroup::buttonClicked), this, &Editor::colorButtonClicked);
-    QVBoxLayout *rightLayout = new QVBoxLayout(rightContent);
-    rightLayout->addWidget(rightWidget);
-    rightLayout->setAlignment(Qt::AlignTop);
-    rightDock->setWidget(rightContent);
 
     // Layers
     layerList = new QTreeView;
@@ -105,18 +96,43 @@ Editor::Editor()
     layerListModel->setHeaderData(0, Qt::Horizontal, QObject::tr("Layers"));
     layerList->setModel(layerListModel);
 
-    connect(colorGroup, QOverload<QAbstractButton *>::of(&QButtonGroup::buttonClicked), this, &Editor::colorButtonClicked);
-
     connect(layerList->selectionModel(), &QItemSelectionModel::selectionChanged, this, &Editor::layerListSelectionChanged);
     connect(layerListModel, &QStandardItemModel::itemChanged, this, &Editor::layerListModelUpdated);
 
+    // Layout
+    // ============================================================
+
+    // Left dock
+    QDockWidget *leftDock = new QDockWidget;
+    QWidget *leftContent = new QWidget;
+    QWidget *leftWidget = new QFrame;
+    QVBoxLayout *leftLayout = new QVBoxLayout(leftContent);
+    leftLayout->addWidget(leftWidget);
+    leftLayout->setAlignment(Qt::AlignTop);
+    leftDock->setWidget(leftContent);
+
+    // Right dock
+    QDockWidget *rightDock = new QDockWidget;
+    QWidget *rightContent = new QWidget;
+    QWidget *rightWidget = new QFrame;
+    QVBoxLayout *rightLayout = new QVBoxLayout(rightContent);
+    rightLayout->addWidget(rightWidget);
+    rightLayout->setAlignment(Qt::AlignTop);
+    rightDock->setWidget(rightContent);
+
+    // Widget placement
+    leftLayout->addWidget(toolWidget);
+    leftLayout->addWidget(colorWidget);
     rightLayout->addWidget(layerList);
-    
+
+    // Dock and central widget placement
     setCentralWidget(imageWidget);
     addDockWidget(Qt::LeftDockWidgetArea, leftDock);
     addDockWidget(Qt::RightDockWidgetArea, rightDock);
 
     // Menu Bar
+    // ============================================================
+
     QMenu *fileMenu = menuBar()->addMenu(tr("&File"));
     newAction = fileMenu->addAction(tr("&New"), this, &Editor::newFile);
     newAction->setShortcut(QKeySequence::New);
@@ -160,6 +176,8 @@ Editor::Editor()
     QMenu *imageMenu = menuBar()->addMenu(tr("&Image"));
     rotateAction = imageMenu->addAction(tr("Rotate 90 degrees"), this, &Editor::rotate);
     rotateAction->setEnabled(false);
+
+    // ============================================================
 
     newFile();
 }

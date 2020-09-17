@@ -258,9 +258,6 @@ ImageWidget::~ImageWidget()
 void ImageWidget::applyTools(QMouseEvent *event)
 {
     if (isLeftButtonDown) {
-        qDebug() << "last" << lastMousePosition;
-        qDebug() << "now" << mousePosition;
-        qDebug() << "global" << event->globalPos();
         QPoint lastPixelPosition = globalToCanvas(lastMousePosition) - QPoint(activeLayer->x, activeLayer->y);
         QPoint pixelPosition = globalToCanvas(mousePosition) - QPoint(activeLayer->x, activeLayer->y);
         switch (activeTool) {
