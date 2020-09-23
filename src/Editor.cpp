@@ -363,7 +363,7 @@ void Editor::addLayer(Layer layer)
     layerListModel->setItem(layerListModel->rowCount(), item);
     imageWidget->activeLayer = &imageWidget->layers.last();
     // TODO figure out the right syntax to select the new layer
-    /* layerList->selectionModel()->select(layerListModel->rowCount() - 1, QItemSelectionModel::SelectCurrent); */
+    layerList->selectionModel()->select(layerListModel->indexFromItem(item), QItemSelectionModel::SelectionFlags(QItemSelectionModel::ClearAndSelect));
 }
 
 Editor::~Editor()

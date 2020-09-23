@@ -58,7 +58,7 @@ public:
     Layer *activeLayer;
     QVector<Layer> layers;
     Tool activeTool = TOOL_PENCIL;
-    Color activeColor = {255, 0, 0, 255};
+    Color activeColor = {0, 0, 0, 255};
     int canvasWidth = 0;
     int canvasHeight = 0;
 
