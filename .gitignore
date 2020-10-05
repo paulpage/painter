@@ -1,5 +1,6 @@
 /*.o
 /moc_*
 /Makefile
-/project
+/painter
 /.qmake.stash
+/tags

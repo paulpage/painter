@@ -10,9 +10,8 @@ struct Layer {
 struct Image {
     int width;
     int height;
-    char *file_name;
+    char *filename;
     Layer *layers;
-    int num_layers;
 }
 
 Image image_create(int width, int height, char *file_name);
