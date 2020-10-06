@@ -22,8 +22,7 @@ SOURCES += \
     src/Editor.cpp \
     src/Image.cpp \
     src/ImageWidget.cpp \
-    src/Bitmap.cpp \
-    src/Layer.cpp
+    src/Bitmap.cpp
 
 HEADERS += \
     src/Editor.h \

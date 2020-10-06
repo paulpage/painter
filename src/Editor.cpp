@@ -6,6 +6,7 @@
 #include <lib/stb_ds.h>
 
 #include "common.h"
+#include "Image.h"
 #include "Editor.h"
 
 Q_DECLARE_METATYPE(QDockWidget::DockWidgetFeatures)
@@ -248,6 +249,7 @@ void Editor::newFile()
     Layer layer = layer_create("Unnamed Layer", 0, 0, 800, 600);
     addLayer(layer);
 
+
     imageWidget->setVisible(true);
     imageWidget->adjustSize();
 
@@ -255,6 +257,10 @@ void Editor::newFile()
     zoomOutAction->setEnabled(true);
     saveAction->setEnabled(true);
     saveAsAction->setEnabled(true);
+
+    // TODO disable these when there's no available history
+    undoAction->setEnabled(true);
+    redoAction->setEnabled(true);
 
     cutAction->setEnabled(true);
     copyAction->setEnabled(true);
@@ -333,10 +339,14 @@ void Editor::saveAs()
 
 void Editor::undo()
 {
+    image_undo(&imageWidget->image, &imageWidget->hist);
+    imageWidget->updateTextures();
 }
 
 void Editor::redo()
 {
+    image_redo(&imageWidget->image, &imageWidget->hist);
+    imageWidget->updateTextures();
 }
 
 void Editor::cut()
@@ -398,6 +408,8 @@ void Editor::addLayer(Layer layer)
     image_add_layer(&imageWidget->image, layer);
     arrput(imageWidget->layerVisibilityMask, true);
     imageWidget->activeLayerIndex = arrlen(imageWidget->image.layers) - 1;
+    // TODO if this gets undone the visibility mask won't get undone. Come to think of it, we could probably just add is_visible to the layer. Also need to update the layer list when we undo.
+    image_take_snapshot(&imageWidget->image, &imageWidget->hist);
 
     QStandardItem *item = new QStandardItem();
     item->setText(layer.name);
@@ -406,7 +418,6 @@ void Editor::addLayer(Layer layer)
     item->setUserTristate(false);
     item->setEditable(true); // TODO change layer name based on editing
     layerListModel->setItem(layerListModel->rowCount(), item);
-    // TODO figure out the right syntax to select the new layer
     layerList->selectionModel()->select(layerListModel->indexFromItem(item), QItemSelectionModel::SelectionFlags(QItemSelectionModel::ClearAndSelect));
 }
 

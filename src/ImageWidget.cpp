@@ -88,6 +88,7 @@ void ImageWidget::mouseReleaseEvent(QMouseEvent *event) {
     isMiddleButtonDown = !((event->button() & Qt::MidButton) == Qt::MidButton);
     isLeftButtonDown = !((event->button() & Qt::LeftButton) == Qt::LeftButton);
     if (!isLeftButtonDown) {
+        image_take_snapshot(&image, &hist);
         timer->stop();
     }
 }
@@ -106,6 +107,7 @@ void ImageWidget::mouseMoveEvent(QMouseEvent *event)
 
     lastMousePosition = mousePosition;
     mousePosition = event->globalPos();
+
     event->accept();
 }
 
@@ -341,7 +343,7 @@ void ImageWidget::rotate(int degrees)
                 int oldY = image.height;
                 for (int i = 0; i < arrlen(image.layers); i++) {
                     Bitmap newBitmap = bitmap_create_rotated(&image.layers[i].bitmap);
-                    // TODO Probably need to reallocate the name and free the old bitmap and/or layer
+                    layer_free(&image.layers[i]);
                     Layer layer = layer_create_from_bitmap(
                             image.layers[i].name,
                             oldY - image.layers[i].y - image.layers[i].bitmap.height,

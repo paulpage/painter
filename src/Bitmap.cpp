@@ -21,7 +21,7 @@ PointQueue pq_create()
 {
     return PointQueue {
         0,
-        1024, // TODO make this higher when we know it works
+        1024,
         0,
         0,
         (Point*)malloc(sizeof(Point) * 1024),
