@@ -240,12 +240,12 @@ void Editor::layerListModelUpdated(QStandardItem *item)
 
 void Editor::newFile()
 {
-
-    if (imageWidget->isImageInitialized) {
-        image_free(imageWidget->image);
+    // TODO we're currently using this function to create new layers
+    // as well as new files. Those should be separate.
+    if (!imageWidget->isImageInitialized) {
+        imageWidget->image = image_create(800, 600, "UNNAMED");
+        imageWidget->isImageInitialized = true;
     }
-    imageWidget->image = image_create(800, 600, "UNNAMED");
-    imageWidget->isImageInitialized = true;
     Layer layer = layer_create("Unnamed Layer", 0, 0, 800, 600);
     addLayer(layer);
 
@@ -401,10 +401,6 @@ void Editor::setActiveColor(Color color)
 
 void Editor::addLayer(Layer layer)
 {
-    if (imageWidget->isImageInitialized) {
-        imageWidget->image = image_create(layer.bitmap.width, layer.bitmap.height, "UNNAMED");
-        imageWidget->isImageInitialized = true;
-    }
     image_add_layer(&imageWidget->image, layer);
     arrput(imageWidget->layerVisibilityMask, true);
     imageWidget->activeLayerIndex = arrlen(imageWidget->image.layers) - 1;
