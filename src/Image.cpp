@@ -86,6 +86,7 @@ void image_remove_layer(Image *image, int id) {
 void image_take_snapshot(Image *image, ImageHistory *hist) {
 
     for (int i = arrlen(hist->snapshots) - 1; i > hist->idx; i--) {
+        image_free(hist->snapshots[i]);
         arrpop(hist->snapshots);
     }
     arrput(hist->snapshots, image_copy(image));
