@@ -20,15 +20,16 @@ include($$PWD/lib/phantomstyle/phantom.pri)
 SOURCES += \
     src/main.cpp \
     src/Editor.cpp \
+    src/Image.cpp \
     src/ImageWidget.cpp \
     src/Bitmap.cpp \
     src/Layer.cpp
 
 HEADERS += \
     src/Editor.h \
+    src/Image.h \
     src/ImageWidget.h \
     src/Bitmap.h \
-    src/Layer.h \
     src/common.h
 
 

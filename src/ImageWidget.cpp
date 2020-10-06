@@ -1,6 +1,8 @@
 #include <QRandomGenerator>
 #include <math.h>
 
+#include "lib/stb_ds.h"
+
 #include "ImageWidget.h"
 
 ImageWidget::ImageWidget(QWidget *parent)
@@ -17,14 +19,12 @@ ImageWidget::ImageWidget(QWidget *parent)
 QPoint ImageWidget::globalToCanvas(QPoint g)
 {
     QPoint base = g - mapToGlobal(QPoint(0, 0));
-    /* double layerWidth = scaleFactor * (double)layer->width; */
-    double layerWidth = scaleFactor * canvasWidth;
+    double layerWidth = scaleFactor * image.width;
     double layerStartX = (double)width() / 2 - layerWidth / 2 + offsetX;
     double screenDistanceX = (double)base.x() - layerStartX;
     int bx = (int)(screenDistanceX / scaleFactor);
 
-    /* double layerHeight = scaleFactor * (double)layer->height; */
-    double layerHeight = scaleFactor * canvasHeight;
+    double layerHeight = scaleFactor * image.height;
     double layerStartY = (double)height() / 2 - layerHeight / 2 + offsetY;
     double screenDistanceY = (double)base.y() - layerStartY;
     int by = (int)(screenDistanceY / scaleFactor);
@@ -45,26 +45,6 @@ void ImageWidget::adjustScrollBar(QScrollBar *scrollBar, double factor)
 {
     /* scrollBar->setValue(int(factor * scrollBar->value() */
     /*                         + ((factor - 1) * scrollBar->pageStep()/2))); */
-}
-
-bool ImageWidget::loadFile(QString fileName)
-{
-    QImageReader reader(fileName);
-    reader.setAutoTransform(true);
-    QImage image = reader.read();
-    if (image.isNull()) {
-        QMessageBox::information(this, QGuiApplication::applicationDisplayName(),
-                                 tr("Can't load %1: %2")
-                                 .arg(QDir::toNativeSeparators(fileName), reader.errorString()));
-        return false;
-    }
-    layers.append(Layer(image));
-
-    scaleFactor = 1.0;
-    updateTextures();
-    setVisible(true);
-
-    return true;
 }
 
 void ImageWidget::wheelEvent(QWheelEvent *event)
@@ -178,10 +158,10 @@ void ImageWidget::initializeGL()
 void ImageWidget::updateTextures() {
     if (isValid()) {
         bitmap_free(&bitmap);
-        bitmap = bitmap_create(layers.first().width, layers.first().height);
-        for (Layer& layer : layers) {
-            if (layer.isVisible) {
-                bitmap_blend(&bitmap, &layer.bitmap, layer.x, layer.y);
+        bitmap = bitmap_create(image.width, image.height);
+        for (int i = 0; i < arrlen(image.layers); i++) {
+            if (layerVisibilityMask[i]) {
+                bitmap_blend(&bitmap, &image.layers[i].bitmap, image.layers[i].x, image.layers[i].y);
             }
         }
 
@@ -210,8 +190,8 @@ void ImageWidget::paintGL()
     glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    GLfloat xRatio = (GLfloat)scaleFactor * (GLfloat)layers.first().bitmap.width / (GLfloat)width();
-    GLfloat yRatio = (GLfloat)scaleFactor * (GLfloat)layers.first().bitmap.height / (GLfloat)height();
+    GLfloat xRatio = (GLfloat)scaleFactor * (GLfloat)image.width / (GLfloat)width();
+    GLfloat yRatio = (GLfloat)scaleFactor * (GLfloat)image.height / (GLfloat)height();
     GLfloat scaledOffsetX = (GLfloat)offsetX * 2 / (GLfloat)width();
     GLfloat scaledOffsetY = (GLfloat)offsetY * 2 / (GLfloat)height();
     GLfloat vertData[24] = {
@@ -258,12 +238,12 @@ ImageWidget::~ImageWidget()
 void ImageWidget::applyTools(QMouseEvent *event)
 {
     if (isLeftButtonDown) {
-        QPoint lastPixelPosition = globalToCanvas(lastMousePosition) - QPoint(activeLayer->x, activeLayer->y);
-        QPoint pixelPosition = globalToCanvas(mousePosition) - QPoint(activeLayer->x, activeLayer->y);
+        QPoint lastPixelPosition = globalToCanvas(lastMousePosition) - QPoint(image.layers[activeLayerIndex].x, image.layers[activeLayerIndex].y);
+        QPoint pixelPosition = globalToCanvas(mousePosition) - QPoint(image.layers[activeLayerIndex].x, image.layers[activeLayerIndex].y);
         switch (activeTool) {
             case TOOL_PENCIL:
                 bitmap_draw_line(
-                        &activeLayer->bitmap,
+                        &image.layers[activeLayerIndex].bitmap,
                         lastPixelPosition.x(),
                         lastPixelPosition.y(),
                         pixelPosition.x(),
@@ -275,7 +255,7 @@ void ImageWidget::applyTools(QMouseEvent *event)
                     for (int x = -5; x < 5; x++) {
                         if (sqrt((double)(x * x) + (double)(y * y)) < 5.0f) {
                             bitmap_draw_line(
-                                    &activeLayer->bitmap,
+                                    &image.layers[activeLayerIndex].bitmap,
                                     lastPixelPosition.x() + x,
                                     lastPixelPosition.y() + y,
                                     pixelPosition.x() + x,
@@ -287,14 +267,14 @@ void ImageWidget::applyTools(QMouseEvent *event)
                 break;
             case TOOL_COLOR_PICKER:
                 Color color;
-                if (bitmap_get_pixel(&activeLayer->bitmap, pixelPosition.x(), pixelPosition.y(), &color)) {
+                if (bitmap_get_pixel(&image.layers[activeLayerIndex].bitmap, pixelPosition.x(), pixelPosition.y(), &color)) {
                     activeColor = color;
                     emit sendColorChanged(color);
                 }
                 break;
             case TOOL_PAINT_BUCKET:
                         bitmap_fill(
-                                &activeLayer->bitmap,
+                                &image.layers[activeLayerIndex].bitmap,
                                 pixelPosition.x(),
                                 pixelPosition.y(),
                                 activeColor);
@@ -309,7 +289,7 @@ void ImageWidget::applyTools(QMouseEvent *event)
                     for (int x = -5; x < 5; x++) {
                         if (sqrt((double)(x * x) + (double)(y * y)) < 5.0f) {
                             bitmap_draw_line(
-                                    &activeLayer->bitmap,
+                                    &image.layers[activeLayerIndex].bitmap,
                                     lastPixelPosition.x() + x,
                                     lastPixelPosition.y() + y,
                                     pixelPosition.x() + x,
@@ -323,10 +303,8 @@ void ImageWidget::applyTools(QMouseEvent *event)
                 {
                     QPoint diff = event->globalPos() - mousePosition;
                     QPoint newPosition = globalToCanvas(event->globalPos() - diff);
-                    activeLayer->x = newPosition.x();
-                    activeLayer->y = newPosition.y();
-                    /* activeLayer->x += (int)((double)diff.x() / scaleFactor); */
-                    /* activeLayer->y += (int)((double)diff.y() / scaleFactor); */
+                    image.layers[activeLayerIndex].x = newPosition.x();
+                    image.layers[activeLayerIndex].y = newPosition.y();
                 }
                 break;
             case TOOL_RECTANGLE_SELECT:
@@ -348,7 +326,7 @@ void ImageWidget::useSprayCan()
         int dx = QRandomGenerator::global()->bounded(-20, 20);
         int dy = QRandomGenerator::global()->bounded(-20, 20);
         if (sqrt((double)(dx * dx) + (double)(dy * dy)) < 20.0f) {
-            bitmap_draw_pixel(&activeLayer->bitmap, x + dx, y + dy, activeColor);
+            bitmap_draw_pixel(&image.layers[activeLayerIndex].bitmap, x + dx, y + dy, activeColor);
         }
     }
     updateTextures();
@@ -360,14 +338,16 @@ void ImageWidget::rotate(int degrees)
     switch (degrees) {
         case 90:
             {
-                int oldY = layers[0].height;
-                for (int i = 0; i < layers.size(); i++) {
-                    Layer layer(layers[i].height, layers[i].width, layers[i].name);
-                    Bitmap newBitmap = bitmap_create_rotated(&layers[i].bitmap);
-                    layer.bitmap = newBitmap;
-                    layer.x = oldY - layers[i].y - layers[i].bitmap.height;
-                    layer.y = layers[i].x;
-                    layers[i] = layer;
+                int oldY = image.height;
+                for (int i = 0; i < arrlen(image.layers); i++) {
+                    Bitmap newBitmap = bitmap_create_rotated(&image.layers[i].bitmap);
+                    // TODO Probably need to reallocate the name and free the old bitmap and/or layer
+                    Layer layer = layer_create_from_bitmap(
+                            image.layers[i].name,
+                            oldY - image.layers[i].y - image.layers[i].bitmap.height,
+                            image.layers[i].x,
+                            newBitmap);
+                    image.layers[i] = layer;
                 }
                 updateTextures();
             }

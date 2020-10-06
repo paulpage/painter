@@ -20,11 +20,10 @@
 #include <QScrollBar>
 #include <QString>
 #include <QTimer>
-#include <QVector>
 #include <QWheelEvent>
 
 #include "Bitmap.h"
-#include "Layer.h"
+#include "Image.h"
 #include "common.h"
 
 QT_FORWARD_DECLARE_CLASS(QOpenGLShaderProgram);
@@ -55,12 +54,13 @@ public:
     void rotate(int degrees);
     Bitmap bitmap = bitmap_create(0, 0);
 
-    Layer *activeLayer;
-    QVector<Layer> layers;
+    int activeLayerIndex;
+    bool isImageInitialized = false;
+    Image image;
+    bool *layerVisibilityMask;
     Tool activeTool = TOOL_PENCIL;
     Color activeColor = {0, 0, 0, 255};
-    int canvasWidth = 0;
-    int canvasHeight = 0;
+    double scaleFactor = 1;
 
 signals:
     void sendColorChanged(Color color);
@@ -68,7 +68,6 @@ signals:
 private:
     QTimer *timer;
     QElapsedTimer *eTimer;
-    double scaleFactor = 1;
     QPoint mousePosition;
     QPoint lastMousePosition;
     int offsetX = 0;
@@ -78,6 +77,7 @@ private:
     bool isLeftButtonDown = false;
     QOpenGLShaderProgram *program;
     GLuint textureId = 0;
+    GLuint *bitmapTextures;
 
     void useSprayCan();
     void applyTools(QMouseEvent *event);

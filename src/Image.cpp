@@ -5,17 +5,36 @@
 
 #include "Image.h"
 
-Image image_create(int width, int height, char *filename) {
-    size_t len = strlen(filename);
-    char *my_filename = malloc(len + 1);
-    strncpy(my_filename, filename, len);
+Layer layer_create(const char *name, int x, int y, int width, int height) {
+    size_t len = strlen(name);
+    char *my_name = (char*)malloc(len + 1);
+    strcpy(my_name, name);
 
-    Layer *layers = (*Layer)malloc(sizeof(Layer) * 8);
+    Bitmap bitmap = bitmap_create(width, height);
+
+    Layer layer = { my_name, bitmap, x, y };
+    return layer;
+}
+
+
+Layer layer_create_from_bitmap(const char *name, int x, int y, Bitmap bitmap) {
+    size_t len = strlen(name);
+    char *my_name = (char*)malloc(len + 1);
+    strcpy(my_name, name);
+
+    Layer layer = { my_name, bitmap, x, y };
+    return layer;
+}
+
+Image image_create(int width, int height, const char *filename) {
+    size_t len = strlen(filename);
+    char *my_filename = (char*)malloc(len + 1);
+    strcpy(my_filename, filename);
+
     return Image {
         width,
         height,
         my_filename,
-        layers,
         0,
     };
 }
@@ -25,18 +44,10 @@ void image_free(Image *image) {
     arrfree(image->layers);
 }
 
-int image_add_layer(Image *image, int width, int height, int x, int y) {
-    Bitmap bitmap = bitmap_create(width, height);
-    Layer layer = {
-        name,
-        bitmap,
-        x,
-        y,
-    };
+void image_add_layer(Image *image, Layer layer) {
     arrput(image->layers, layer);
-    return arrlen(image->layers) - 1;
 }
 
-bool image_remove_layer(Image *image, int id) {
+void image_remove_layer(Image *image, int id) {
     arrdel(image->layers, id);
 }

@@ -3,6 +3,8 @@
 #include <QClipboard>
 #include <QApplication>
 
+#include <lib/stb_ds.h>
+
 #include "common.h"
 #include "Editor.h"
 
@@ -28,6 +30,32 @@ static void initializeImageFileDialog(QFileDialog *dialog, QFileDialog::AcceptMo
     dialog->setMimeTypeFilters(mimeTypeFilters);
     if (mode == QFileDialog::AcceptSave)
         dialog->setDefaultSuffix("png");
+}
+
+static Layer layerFromQImage(QImage image) {
+    if (!image.isNull()) {
+
+        image = image.convertToFormat(QImage::Format_RGBA8888);
+        int width = image.width();
+        int height = image.height();
+        Bitmap bitmap = bitmap_create(width, height);
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                QRgb c = image.pixel(x, y);
+                Color color = {
+                    (unsigned char)qRed(c),
+                    (unsigned char)qGreen(c),
+                    (unsigned char)qBlue(c),
+                    (unsigned char)qAlpha(c),
+                };
+                bitmap_draw_pixel(&bitmap, x, y, color);
+            }
+        }
+
+        Layer layer = layer_create_from_bitmap("Unnamed Layer", 100, 100, bitmap);
+        return layer;
+    }
+    return layer_create("Unnamed Layer", 0, 0, 0, 0);
 }
 
 Editor::Editor()
@@ -200,19 +228,24 @@ void Editor::colorButtonClicked(QAbstractButton *button)
 void Editor::layerListSelectionChanged()
 {
     int i = layerList->selectionModel()->selectedIndexes().first().row();
-    imageWidget->activeLayer = &imageWidget->layers[i];
+    imageWidget->activeLayerIndex = i;
 }
 
 void Editor::layerListModelUpdated(QStandardItem *item)
 {
-    imageWidget->layers[item->row()].isVisible = (item->checkState() == Qt::Checked);
+    imageWidget->layerVisibilityMask[item->row()] = (item->checkState() == Qt::Checked);
     imageWidget->updateTextures();
 }
 
 void Editor::newFile()
 {
 
-    Layer layer(800, 600);
+    if (imageWidget->isImageInitialized) {
+        image_free(imageWidget->image);
+    }
+    imageWidget->image = image_create(800, 600, "UNNAMED");
+    imageWidget->isImageInitialized = true;
+    Layer layer = layer_create("Unnamed Layer", 0, 0, 800, 600);
     addLayer(layer);
 
     imageWidget->setVisible(true);
@@ -238,7 +271,19 @@ void Editor::open()
     QString fileName;
     if (dialog.exec() == QDialog::Accepted) {
         fileName = dialog.selectedFiles().at(0);
-        if (imageWidget->loadFile(fileName)) {
+        QImageReader reader(fileName);
+        reader.setAutoTransform(true);
+        QImage image = reader.read();
+        Layer layer = layerFromQImage(image);
+        if (layer.bitmap.width != 0) {
+            if (imageWidget->isImageInitialized) {
+                image_free(imageWidget->image);
+            }
+            imageWidget->image = image_create(800, 600, "UNNAMED");
+            imageWidget->isImageInitialized = true;
+            imageWidget->scaleFactor = 1.0;
+            imageWidget->updateTextures();
+            imageWidget->setVisible(true);
             setWindowFilePath(fileName);
             zoomInAction->setEnabled(true);
             zoomOutAction->setEnabled(true);
@@ -305,11 +350,8 @@ void Editor::copy()
 void Editor::paste()
 {
     QClipboard *clipboard = QApplication::clipboard();
-    QImage image = clipboard->image();
-    if (!image.isNull()) {
-        Layer layer(image);
-        layer.x = 100;
-        layer.y = 100;
+    Layer layer = layerFromQImage(clipboard->image());
+    if (layer.bitmap.width != 0) {
         addLayer(layer);
     }
 }
@@ -349,11 +391,14 @@ void Editor::setActiveColor(Color color)
 
 void Editor::addLayer(Layer layer)
 {
-    if (imageWidget->layers.size() == 0) {
-        imageWidget->canvasWidth = layer.width;
-        imageWidget->canvasHeight = layer.height;
+    if (imageWidget->isImageInitialized) {
+        imageWidget->image = image_create(layer.bitmap.width, layer.bitmap.height, "UNNAMED");
+        imageWidget->isImageInitialized = true;
     }
-    imageWidget->layers.append(layer);
+    image_add_layer(&imageWidget->image, layer);
+    arrput(imageWidget->layerVisibilityMask, true);
+    imageWidget->activeLayerIndex = arrlen(imageWidget->image.layers) - 1;
+
     QStandardItem *item = new QStandardItem();
     item->setText(layer.name);
     item->setCheckable(true);
@@ -361,7 +406,6 @@ void Editor::addLayer(Layer layer)
     item->setUserTristate(false);
     item->setEditable(true); // TODO change layer name based on editing
     layerListModel->setItem(layerListModel->rowCount(), item);
-    imageWidget->activeLayer = &imageWidget->layers.last();
     // TODO figure out the right syntax to select the new layer
     layerList->selectionModel()->select(layerListModel->indexFromItem(item), QItemSelectionModel::SelectionFlags(QItemSelectionModel::ClearAndSelect));
 }
