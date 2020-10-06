@@ -100,6 +100,7 @@ private:
     void toolButtonClicked(QAbstractButton *button);
     void colorButtonClicked(QAbstractButton *button);
     void layerListSelectionChanged();
+    void refreshLayerList();
     void layerListModelUpdated(QStandardItem *item);
 
     void addLayer(Layer layer);

@@ -122,6 +122,7 @@ Editor::Editor()
     layerList->setRootIsDecorated(false);
 
     layerListModel = new QStandardItemModel(0, 1, this);
+    // TODO this doesn't seem to work anymore?
     layerListModel->setHeaderData(0, Qt::Horizontal, QObject::tr("Layers"));
     layerList->setModel(layerListModel);
 
@@ -341,12 +342,14 @@ void Editor::undo()
 {
     image_undo(&imageWidget->image, &imageWidget->hist);
     imageWidget->updateTextures();
+    refreshLayerList();
 }
 
 void Editor::redo()
 {
     image_redo(&imageWidget->image, &imageWidget->hist);
     imageWidget->updateTextures();
+    refreshLayerList();
 }
 
 void Editor::cut()
@@ -399,6 +402,20 @@ void Editor::setActiveColor(Color color)
     }
 }
 
+void Editor::refreshLayerList() {
+    layerListModel->clear();
+    for (int i = 0; i < arrlen(imageWidget->image.layers); i++) {
+        QStandardItem *item = new QStandardItem();
+        item->setText(imageWidget->image.layers[i].name);
+        item->setCheckable(imageWidget->layerVisibilityMask[i]);
+        item->setCheckState(Qt::Checked);
+        item->setUserTristate(false);
+        item->setEditable(true); // TODO change layer name based on editing
+        layerListModel->setItem(layerListModel->rowCount(), item);
+        layerList->selectionModel()->select(layerListModel->indexFromItem(item), QItemSelectionModel::SelectionFlags(QItemSelectionModel::ClearAndSelect));
+    }
+}
+
 void Editor::addLayer(Layer layer)
 {
     image_add_layer(&imageWidget->image, layer);
@@ -406,15 +423,16 @@ void Editor::addLayer(Layer layer)
     imageWidget->activeLayerIndex = arrlen(imageWidget->image.layers) - 1;
     // TODO if this gets undone the visibility mask won't get undone. Come to think of it, we could probably just add is_visible to the layer. Also need to update the layer list when we undo.
     image_take_snapshot(&imageWidget->image, &imageWidget->hist);
+    refreshLayerList();
 
-    QStandardItem *item = new QStandardItem();
-    item->setText(layer.name);
-    item->setCheckable(true);
-    item->setCheckState(Qt::Checked);
-    item->setUserTristate(false);
-    item->setEditable(true); // TODO change layer name based on editing
-    layerListModel->setItem(layerListModel->rowCount(), item);
-    layerList->selectionModel()->select(layerListModel->indexFromItem(item), QItemSelectionModel::SelectionFlags(QItemSelectionModel::ClearAndSelect));
+/*     QStandardItem *item = new QStandardItem(); */
+/*     item->setText(layer.name); */
+/*     item->setCheckable(true); */
+/*     item->setCheckState(Qt::Checked); */
+/*     item->setUserTristate(false); */
+/*     item->setEditable(true); // TODO change layer name based on editing */
+/*     layerListModel->setItem(layerListModel->rowCount(), item); */
+/*     layerList->selectionModel()->select(layerListModel->indexFromItem(item), QItemSelectionModel::SelectionFlags(QItemSelectionModel::ClearAndSelect)); */
 }
 
 Editor::~Editor()
