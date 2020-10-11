@@ -79,6 +79,7 @@ private:
     QOpenGLShaderProgram *program;
     GLuint textureId = 0;
     GLuint *bitmapTextures;
+    GLuint backgroundTexture = 0;
 
     void useSprayCan();
     void applyTools(QMouseEvent *event);

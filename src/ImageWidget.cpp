@@ -14,6 +14,7 @@ ImageWidget::ImageWidget(QWidget *parent)
     timer->setInterval(5);
     connect(timer, &QTimer::timeout, this, QOverload<>::of(&ImageWidget::useSprayCan));
     connect(this, SIGNAL(sendColorChanged(Color)), parent, SLOT(setActiveColor(Color)));
+
 }
 
 QPoint ImageWidget::globalToCanvas(QPoint g)
@@ -158,6 +159,7 @@ void ImageWidget::initializeGL()
 }
 
 void ImageWidget::updateTextures() {
+
     if (isValid()) {
         bitmap_free(&bitmap);
         bitmap = bitmap_create(image.width, image.height);
@@ -187,6 +189,25 @@ void ImageWidget::updateTextures() {
 
 void ImageWidget::paintGL()
 {
+    if (backgroundTexture == 0) {
+        Bitmap background = bitmap_create(image.width, image.height);
+        for (int x = 0; x < image.width; x++) {
+            for (int y = 0; y < image.height; y++) {
+                bitmap_draw_pixel(&bitmap, x, y, (Color){255, 255, 255, 255});
+            }
+        }
+        glEnable(GL_TEXTURE_2D);
+        glGenTextures(1, &backgroundTexture);
+        glBindTexture(GL_TEXTURE_2D, backgroundTexture);
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+        glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+        QImage image(bitmap.data, bitmap.width, bitmap.height, bitmap.width * 4, QImage::Format_RGBA8888, nullptr, nullptr);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image.width(), image.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, image.bits());
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glDisable(GL_TEXTURE_2D);
+    }
+
     QOpenGLBuffer vbo;
 
     glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
@@ -222,8 +243,13 @@ void ImageWidget::paintGL()
             2 * sizeof(GLfloat),
             2,
             4 * sizeof(GLfloat));
+
+    glBindTexture(GL_TEXTURE_2D, backgroundTexture);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+
     glBindTexture(GL_TEXTURE_2D, textureId);
     glDrawArrays(GL_TRIANGLES, 0, 6);
+
 
     update();
 }
