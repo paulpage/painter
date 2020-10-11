@@ -47,14 +47,14 @@ Image image_create(int width, int height, const char *filename) {
         width,
         height,
         my_filename,
-        0,
+        NULL,
     };
 }
 
 Image image_copy(Image *original) {
     char *filename = (char*)malloc(strlen(original->filename) + 1);
     strcpy(filename, original->filename);
-    Layer *layers = 0;
+    Layer *layers = NULL;
     for (int i = 0; i < arrlen(original->layers); i++) {
         arrput(layers, layer_copy(&original->layers[i]));
     }

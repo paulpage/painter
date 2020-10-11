@@ -49,7 +49,7 @@ void ImageWidget::adjustScrollBar(QScrollBar *scrollBar, double factor)
 
 void ImageWidget::wheelEvent(QWheelEvent *event)
 {
-    QPoint numPixels = event->pixelDelta();
+    // QPoint numPixels = event->pixelDelta();
     QPoint numDegrees = event->angleDelta() / 8;
 
     if (!numDegrees.isNull()) {

@@ -58,7 +58,7 @@ public:
     bool isImageInitialized = false;
     Image image;
     ImageHistory hist = (ImageHistory){0, -1};
-    bool *layerVisibilityMask;
+    bool *layerVisibilityMask = NULL;
     Tool activeTool = TOOL_PENCIL;
     Color activeColor = {0, 0, 0, 255};
     double scaleFactor = 1;

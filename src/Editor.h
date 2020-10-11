@@ -30,6 +30,8 @@
 #include <QStandardItemModel>
 #include <QStandardPaths>
 #include <QStatusBar>
+#include <QLineEdit>
+#include <QTabWidget>
 
 #define PALLETTE_LENGTH 28
 
@@ -56,12 +58,13 @@ private slots:
     void normalSize();
     void fitToWindow();
     void rotate();
+    void newLayer();
 
     void setActiveColor(Color color);
 
 private:
 
-    ImageWidget *imageWidget;
+    QTabWidget *tabs;
     QButtonGroup *toolGroup;
     QButtonGroup *colorGroup;
     QTreeView *layerList;
@@ -102,8 +105,9 @@ private:
     void layerListSelectionChanged();
     void refreshLayerList();
     void layerListModelUpdated(QStandardItem *item);
-
+    void createFile(int width, int height);
     void addLayer(Layer layer);
+    ImageWidget *activeTab();
 
     QAction *newAction;
     QAction *openAction;
@@ -120,5 +124,6 @@ private:
     QAction *normalSizeAction;
     QAction *fitToWindowAction;
     QAction *rotateAction;
+    QAction *addLayerAction;
 };
 #endif // MAINWINDOW_H

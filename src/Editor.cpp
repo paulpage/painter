@@ -2,6 +2,9 @@
 #include <QItemSelectionModel>
 #include <QClipboard>
 #include <QApplication>
+#include <QDialog>
+#include <QDialogButtonBox>
+#include <QFormLayout>
 
 #include <lib/stb_ds.h>
 
@@ -66,7 +69,7 @@ Editor::Editor()
     // Widgets
     // ============================================================
 
-    imageWidget = new ImageWidget(this);
+    tabs = new QTabWidget(this);
 
     // Tools
     QWidget *toolWidget = new QWidget;
@@ -156,7 +159,7 @@ Editor::Editor()
     rightLayout->addWidget(layerList);
 
     // Dock and central widget placement
-    setCentralWidget(imageWidget);
+    setCentralWidget(tabs);
     addDockWidget(Qt::LeftDockWidgetArea, leftDock);
     addDockWidget(Qt::RightDockWidgetArea, rightDock);
 
@@ -204,17 +207,26 @@ Editor::Editor()
     zoomOutAction->setEnabled(false);
 
     QMenu *imageMenu = menuBar()->addMenu(tr("&Image"));
-    rotateAction = imageMenu->addAction(tr("Rotate 90 degrees"), this, &Editor::rotate);
+    rotateAction = imageMenu->addAction(tr("&Rotate 90 degrees"), this, &Editor::rotate);
     rotateAction->setEnabled(false);
+
+    QMenu *layerMenu = menuBar()->addMenu(tr("&Layer"));
+    addLayerAction = layerMenu->addAction(tr("&Add layer"), this, &Editor::newLayer);
+    addLayerAction->setShortcut(tr("Ctrl+Shift+N"));
+    addLayerAction->setEnabled(false);
 
     // ============================================================
 
-    newFile();
+    createFile(800, 600);
+}
+
+ImageWidget *Editor::activeTab() {
+    return static_cast<ImageWidget*>(tabs->currentWidget());
 }
 
 void Editor::toolButtonClicked(QAbstractButton *button)
 {
-    imageWidget->activeTool = (Tool)toolGroup->id(button);
+    activeTab()->activeTool = (Tool)toolGroup->id(button);
     button->setChecked(true);
 }
 
@@ -222,7 +234,7 @@ void Editor::colorButtonClicked(QAbstractButton *button)
 {
     int c = colorGroup->id(button);
     if (c >= 0 && c < PALLETTE_LENGTH) {
-        imageWidget->activeColor = pallette[c];
+        activeTab()->activeColor = pallette[c];
         button->setChecked(true);
     }
 }
@@ -230,29 +242,58 @@ void Editor::colorButtonClicked(QAbstractButton *button)
 void Editor::layerListSelectionChanged()
 {
     int i = layerList->selectionModel()->selectedIndexes().first().row();
-    imageWidget->activeLayerIndex = i;
+    activeTab()->activeLayerIndex = i;
 }
 
 void Editor::layerListModelUpdated(QStandardItem *item)
 {
-    imageWidget->layerVisibilityMask[item->row()] = (item->checkState() == Qt::Checked);
-    imageWidget->updateTextures();
+    activeTab()->layerVisibilityMask[item->row()] = (item->checkState() == Qt::Checked);
+    activeTab()->updateTextures();
 }
 
 void Editor::newFile()
 {
-    // TODO we're currently using this function to create new layers
-    // as well as new files. Those should be separate.
-    if (!imageWidget->isImageInitialized) {
-        imageWidget->image = image_create(800, 600, "UNNAMED");
-        imageWidget->isImageInitialized = true;
+    auto dialog = new QDialog(this);
+    auto layout = new QFormLayout(dialog);
+
+    auto widthInput = new QLineEdit;
+    auto heightInput = new QLineEdit;
+    auto buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+
+    layout->addRow(new QLabel(tr("Width (px):")), widthInput);
+    layout->addRow(new QLabel(tr("Height (px):")), heightInput);
+    layout->addRow(buttonBox);
+
+    connect(buttonBox, SIGNAL(accepted()), dialog, SLOT(accept()));
+    connect(buttonBox, SIGNAL(rejected()), dialog, SLOT(reject()));
+    connect(buttonBox, &QDialogButtonBox::accepted, this, [this, widthInput, heightInput]{
+        int width = widthInput->text().toInt();
+        int height = heightInput->text().toInt();
+        createFile(width, height);
+    });
+    dialog->show();
+}
+
+void Editor::newLayer()
+{
+    if (activeTab()->isImageInitialized) {
+        Layer layer = layer_create("Unnamed Layer", 0, 0, activeTab()->image.width, activeTab()->image.height);
+        addLayer(layer);
     }
-    Layer layer = layer_create("Unnamed Layer", 0, 0, 800, 600);
+}
+
+void Editor::createFile(int width, int height)
+{
+    auto widget = new ImageWidget(this);
+    widget->image = image_create(width, height, "UNNAMED");
+    widget->isImageInitialized = true;
+    tabs->addTab(widget, "UNNAMED");
+    tabs->setCurrentWidget(widget);
+    Layer layer = layer_create("Unnamed Layer", 0, 0, width, height);
     addLayer(layer);
 
-
-    imageWidget->setVisible(true);
-    imageWidget->adjustSize();
+    activeTab()->setVisible(true);
+    activeTab()->adjustSize();
 
     zoomInAction->setEnabled(true);
     zoomOutAction->setEnabled(true);
@@ -268,6 +309,8 @@ void Editor::newFile()
     pasteAction->setEnabled(true);
 
     rotateAction->setEnabled(true);
+
+    addLayerAction->setEnabled(true);
 }
 
 void Editor::open()
@@ -283,14 +326,14 @@ void Editor::open()
         QImage image = reader.read();
         Layer layer = layerFromQImage(image);
         if (layer.bitmap.width != 0) {
-            if (imageWidget->isImageInitialized) {
-                image_free(imageWidget->image);
+            if (activeTab()->isImageInitialized) {
+                image_free(activeTab()->image);
             }
-            imageWidget->image = image_create(800, 600, "UNNAMED");
-            imageWidget->isImageInitialized = true;
-            imageWidget->scaleFactor = 1.0;
-            imageWidget->updateTextures();
-            imageWidget->setVisible(true);
+            activeTab()->image = image_create(800, 600, "UNNAMED");
+            activeTab()->isImageInitialized = true;
+            activeTab()->scaleFactor = 1.0;
+            activeTab()->updateTextures();
+            activeTab()->setVisible(true);
             setWindowFilePath(fileName);
             zoomInAction->setEnabled(true);
             zoomOutAction->setEnabled(true);
@@ -322,10 +365,10 @@ void Editor::save()
         }
         if (write) {
             QImage image(
-                    imageWidget->bitmap.data,
-                    imageWidget->bitmap.width,
-                    imageWidget->bitmap.height,
-                    imageWidget->bitmap.width * 4,
+                    activeTab()->bitmap.data,
+                    activeTab()->bitmap.width,
+                    activeTab()->bitmap.height,
+                    activeTab()->bitmap.width * 4,
                     QImage::Format_RGBA8888,
                     nullptr,
                     nullptr);
@@ -340,15 +383,15 @@ void Editor::saveAs()
 
 void Editor::undo()
 {
-    image_undo(&imageWidget->image, &imageWidget->hist);
-    imageWidget->updateTextures();
+    image_undo(&activeTab()->image, &activeTab()->hist);
+    activeTab()->updateTextures();
     refreshLayerList();
 }
 
 void Editor::redo()
 {
-    image_redo(&imageWidget->image, &imageWidget->hist);
-    imageWidget->updateTextures();
+    image_redo(&activeTab()->image, &activeTab()->hist);
+    activeTab()->updateTextures();
     refreshLayerList();
 }
 
@@ -371,12 +414,12 @@ void Editor::paste()
 
 void Editor::zoomIn()
 {
-    imageWidget->scaleImage(1.25);
+    activeTab()->scaleImage(1.25);
 }
 
 void Editor::zoomOut()
 {
-    imageWidget->scaleImage(0.8);
+    activeTab()->scaleImage(0.8);
 }
 
 void Editor::normalSize()
@@ -389,14 +432,14 @@ void Editor::fitToWindow()
 
 void Editor::rotate()
 {
-    imageWidget->rotate(90);
+    activeTab()->rotate(90);
 }
 
 void Editor::setActiveColor(Color color)
 {
     for (int i = 0; i < PALLETTE_LENGTH; i++) {
         if (color_eq(pallette[i], color)) {
-            imageWidget->activeColor = pallette[i];
+            activeTab()->activeColor = pallette[i];
             colorGroup->button(i)->setChecked(true);
         }
     }
@@ -404,10 +447,10 @@ void Editor::setActiveColor(Color color)
 
 void Editor::refreshLayerList() {
     layerListModel->clear();
-    for (int i = 0; i < arrlen(imageWidget->image.layers); i++) {
+    for (int i = 0; i < arrlen(activeTab()->image.layers); i++) {
         QStandardItem *item = new QStandardItem();
-        item->setText(imageWidget->image.layers[i].name);
-        item->setCheckable(imageWidget->layerVisibilityMask[i]);
+        item->setText(activeTab()->image.layers[i].name);
+        item->setCheckable(activeTab()->layerVisibilityMask[i]);
         item->setCheckState(Qt::Checked);
         item->setUserTristate(false);
         item->setEditable(true); // TODO change layer name based on editing
@@ -418,21 +461,12 @@ void Editor::refreshLayerList() {
 
 void Editor::addLayer(Layer layer)
 {
-    image_add_layer(&imageWidget->image, layer);
-    arrput(imageWidget->layerVisibilityMask, true);
-    imageWidget->activeLayerIndex = arrlen(imageWidget->image.layers) - 1;
+    image_add_layer(&activeTab()->image, layer);
+    arrput(activeTab()->layerVisibilityMask, true);
+    activeTab()->activeLayerIndex = arrlen(activeTab()->image.layers) - 1;
     // TODO if this gets undone the visibility mask won't get undone. Come to think of it, we could probably just add is_visible to the layer. Also need to update the layer list when we undo.
-    image_take_snapshot(&imageWidget->image, &imageWidget->hist);
+    image_take_snapshot(&activeTab()->image, &activeTab()->hist);
     refreshLayerList();
-
-/*     QStandardItem *item = new QStandardItem(); */
-/*     item->setText(layer.name); */
-/*     item->setCheckable(true); */
-/*     item->setCheckState(Qt::Checked); */
-/*     item->setUserTristate(false); */
-/*     item->setEditable(true); // TODO change layer name based on editing */
-/*     layerListModel->setItem(layerListModel->rowCount(), item); */
-/*     layerList->selectionModel()->select(layerListModel->indexFromItem(item), QItemSelectionModel::SelectionFlags(QItemSelectionModel::ClearAndSelect)); */
 }
 
 Editor::~Editor()
