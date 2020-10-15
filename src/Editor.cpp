@@ -5,6 +5,8 @@
 #include <QDialog>
 #include <QDialogButtonBox>
 #include <QFormLayout>
+#include <QHBoxLayout>
+#include <QSpacerItem>
 
 #include <lib/stb_ds.h>
 
@@ -14,8 +16,7 @@
 
 Q_DECLARE_METATYPE(QDockWidget::DockWidgetFeatures)
 
-static void initializeImageFileDialog(QFileDialog *dialog, QFileDialog::AcceptMode mode)
-{
+static void initializeImageFileDialog(QFileDialog *dialog, QFileDialog::AcceptMode mode) {
     static bool firstDialog = true;
 
     if (firstDialog) {
@@ -62,8 +63,7 @@ static Layer layerFromQImage(QImage image) {
     return layer_create("Unnamed Layer", 0, 0, 0, 0);
 }
 
-Editor::Editor()
-{
+Editor::Editor() {
     qRegisterMetaType<QDockWidget::DockWidgetFeatures>();
 
     // Widgets
@@ -173,47 +173,38 @@ Editor::Editor()
     openAction->setShortcut(QKeySequence::Open);
     saveAction = fileMenu->addAction(tr("&Save"), this, &Editor::save);
     saveAction->setShortcut(QKeySequence::Save);
-    saveAction->setEnabled(false);
     saveAsAction = fileMenu->addAction(tr("Save &As..."), this, &Editor::saveAs);
     saveAsAction->setShortcut(QKeySequence::SaveAs);
-    saveAsAction->setEnabled(false);
     fileMenu->addSeparator();
     exitAction = fileMenu->addAction(tr("E&xit"), this, &QWidget::close);
 
     QMenu *editMenu = menuBar()->addMenu(tr("&Edit"));
     undoAction = editMenu->addAction(tr("&Undo"), this, &Editor::undo);
     undoAction->setShortcut(QKeySequence::Undo);
-    undoAction->setEnabled(false);
     redoAction = editMenu->addAction(tr("&Redo"), this, &Editor::redo);
     redoAction->setShortcut(QKeySequence::Redo);
-    redoAction->setEnabled(false);
     editMenu->addSeparator();
     cutAction = editMenu->addAction(tr("Cu&t"), this, &Editor::cut);
     cutAction->setShortcut(QKeySequence::Cut);
-    cutAction->setEnabled(false);
     copyAction = editMenu->addAction(tr("&Copy"), this, &Editor::copy);
     copyAction->setShortcut(QKeySequence::Copy);
-    copyAction->setEnabled(false);
     pasteAction = editMenu->addAction(tr("&Paste"), this, &Editor::paste);
     pasteAction->setShortcut(QKeySequence::Paste);
-    pasteAction->setEnabled(false);
 
     QMenu *viewMenu = menuBar()->addMenu(tr("&View"));
     zoomInAction = viewMenu->addAction(tr("Zoom &In (25%)"), this, &Editor::zoomIn);
     zoomInAction->setShortcut(QKeySequence::ZoomIn);
-    zoomInAction->setEnabled(false);
     zoomOutAction = viewMenu->addAction(tr("Zoom &Out (25%)"), this, &Editor::zoomOut);
     zoomOutAction->setShortcut(QKeySequence::ZoomOut);
-    zoomOutAction->setEnabled(false);
 
     QMenu *imageMenu = menuBar()->addMenu(tr("&Image"));
     rotateAction = imageMenu->addAction(tr("&Rotate 90 degrees"), this, &Editor::rotate);
-    rotateAction->setEnabled(false);
 
     QMenu *layerMenu = menuBar()->addMenu(tr("&Layer"));
     addLayerAction = layerMenu->addAction(tr("&Add layer"), this, &Editor::newLayer);
     addLayerAction->setShortcut(tr("Ctrl+Shift+N"));
-    addLayerAction->setEnabled(false);
+
+    updateImageActions(false);
 
     // ============================================================
 
@@ -224,14 +215,12 @@ ImageWidget *Editor::activeTab() {
     return static_cast<ImageWidget*>(tabs->currentWidget());
 }
 
-void Editor::toolButtonClicked(QAbstractButton *button)
-{
+void Editor::toolButtonClicked(QAbstractButton *button) {
     activeTab()->activeTool = (Tool)toolGroup->id(button);
     button->setChecked(true);
 }
 
-void Editor::colorButtonClicked(QAbstractButton *button)
-{
+void Editor::colorButtonClicked(QAbstractButton *button) {
     int c = colorGroup->id(button);
     if (c >= 0 && c < PALLETTE_LENGTH) {
         activeTab()->activeColor = pallette[c];
@@ -239,20 +228,17 @@ void Editor::colorButtonClicked(QAbstractButton *button)
     }
 }
 
-void Editor::layerListSelectionChanged()
-{
+void Editor::layerListSelectionChanged() {
     int i = layerList->selectionModel()->selectedIndexes().first().row();
     activeTab()->activeLayerIndex = i;
 }
 
-void Editor::layerListModelUpdated(QStandardItem *item)
-{
+void Editor::layerListModelUpdated(QStandardItem *item) {
     activeTab()->layerVisibilityMask[item->row()] = (item->checkState() == Qt::Checked);
     activeTab()->updateTextures();
 }
 
-void Editor::newFile()
-{
+void Editor::newFile() {
     auto dialog = new QDialog(this);
     auto layout = new QFormLayout(dialog);
 
@@ -274,16 +260,14 @@ void Editor::newFile()
     dialog->show();
 }
 
-void Editor::newLayer()
-{
+void Editor::newLayer() {
     if (activeTab()->isImageInitialized) {
         Layer layer = layer_create("Unnamed Layer", 0, 0, activeTab()->image.width, activeTab()->image.height);
         addLayer(layer);
     }
 }
 
-void Editor::createFile(int width, int height)
-{
+void Editor::createFile(int width, int height) {
     auto widget = new ImageWidget(this);
     widget->image = image_create(width, height, "UNNAMED");
     widget->isImageInitialized = true;
@@ -295,26 +279,10 @@ void Editor::createFile(int width, int height)
     activeTab()->setVisible(true);
     activeTab()->adjustSize();
 
-    zoomInAction->setEnabled(true);
-    zoomOutAction->setEnabled(true);
-    saveAction->setEnabled(true);
-    saveAsAction->setEnabled(true);
-
-    // TODO disable these when there's no available history
-    undoAction->setEnabled(true);
-    redoAction->setEnabled(true);
-
-    cutAction->setEnabled(true);
-    copyAction->setEnabled(true);
-    pasteAction->setEnabled(true);
-
-    rotateAction->setEnabled(true);
-
-    addLayerAction->setEnabled(true);
+    updateImageActions(true);
 }
 
-void Editor::open()
-{
+void Editor::open() {
     QFileDialog dialog(this, tr("Open File"));
     initializeImageFileDialog(&dialog, QFileDialog::AcceptOpen);
 
@@ -345,8 +313,7 @@ void Editor::open()
     }
 }
 
-void Editor::save()
-{
+void Editor::save() {
     QFileDialog dialog(this, tr("Save File"));
     initializeImageFileDialog(&dialog, QFileDialog::AcceptSave);
     QString fileName;
@@ -377,34 +344,25 @@ void Editor::save()
     }
 }
 
-void Editor::saveAs()
-{
-}
+void Editor::saveAs() {}
 
-void Editor::undo()
-{
+void Editor::undo() {
     image_undo(&activeTab()->image, &activeTab()->hist);
     activeTab()->updateTextures();
     refreshLayerList();
 }
 
-void Editor::redo()
-{
+void Editor::redo() {
     image_redo(&activeTab()->image, &activeTab()->hist);
     activeTab()->updateTextures();
     refreshLayerList();
 }
 
-void Editor::cut()
-{
-}
+void Editor::cut() {}
 
-void Editor::copy()
-{
-}
+void Editor::copy() {}
 
-void Editor::paste()
-{
+void Editor::paste() {
     QClipboard *clipboard = QApplication::clipboard();
     Layer layer = layerFromQImage(clipboard->image());
     if (layer.bitmap.width != 0) {
@@ -412,31 +370,23 @@ void Editor::paste()
     }
 }
 
-void Editor::zoomIn()
-{
+void Editor::zoomIn() {
     activeTab()->scaleImage(1.25);
 }
 
-void Editor::zoomOut()
-{
+void Editor::zoomOut() {
     activeTab()->scaleImage(0.8);
 }
 
-void Editor::normalSize()
-{
-}
+void Editor::normalSize() {}
 
-void Editor::fitToWindow()
-{
-}
+void Editor::fitToWindow() {}
 
-void Editor::rotate()
-{
+void Editor::rotate() {
     activeTab()->rotate(90);
 }
 
-void Editor::setActiveColor(Color color)
-{
+void Editor::setActiveColor(Color color) {
     for (int i = 0; i < PALLETTE_LENGTH; i++) {
         if (color_eq(pallette[i], color)) {
             activeTab()->activeColor = pallette[i];
@@ -459,8 +409,7 @@ void Editor::refreshLayerList() {
     }
 }
 
-void Editor::addLayer(Layer layer)
-{
+void Editor::addLayer(Layer layer) {
     image_add_layer(&activeTab()->image, layer);
     arrput(activeTab()->layerVisibilityMask, true);
     activeTab()->activeLayerIndex = arrlen(activeTab()->image.layers) - 1;
@@ -469,6 +418,19 @@ void Editor::addLayer(Layer layer)
     refreshLayerList();
 }
 
-Editor::~Editor()
-{
+void Editor::updateImageActions(bool enabled) {
+    // TODO disable undo and redo when there's no available history
+    saveAction->setEnabled(enabled);
+    saveAsAction->setEnabled(enabled);
+    undoAction->setEnabled(enabled);
+    redoAction->setEnabled(enabled);
+    cutAction->setEnabled(enabled);
+    copyAction->setEnabled(enabled);
+    pasteAction->setEnabled(enabled);
+    zoomInAction->setEnabled(enabled);
+    zoomOutAction->setEnabled(enabled);
+    rotateAction->setEnabled(enabled);
+    addLayerAction->setEnabled(enabled);
 }
+
+Editor::~Editor() {}

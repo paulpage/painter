@@ -5,8 +5,7 @@
 
 #include "ImageWidget.h"
 
-ImageWidget::ImageWidget(QWidget *parent)
-{
+ImageWidget::ImageWidget(QWidget *parent) {
     setBackgroundRole(QPalette::Dark);
     timer = new QTimer(this);
     eTimer = new QElapsedTimer;
@@ -17,8 +16,7 @@ ImageWidget::ImageWidget(QWidget *parent)
 
 }
 
-QPoint ImageWidget::globalToCanvas(QPoint g)
-{
+QPoint ImageWidget::globalToCanvas(QPoint g) {
     QPoint base = g - mapToGlobal(QPoint(0, 0));
     double layerWidth = scaleFactor * image.width;
     double layerStartX = (double)width() / 2 - layerWidth / 2 + offsetX;
@@ -33,8 +31,7 @@ QPoint ImageWidget::globalToCanvas(QPoint g)
     return QPoint(bx, by);
 }
 
-void ImageWidget::scaleImage(double factor)
-{
+void ImageWidget::scaleImage(double factor) {
     scaleFactor *= factor;
     updateTextures();
 
@@ -42,14 +39,12 @@ void ImageWidget::scaleImage(double factor)
     /* adjustScrollBar(verticalScrollBar(), factor); */
 }
 
-void ImageWidget::adjustScrollBar(QScrollBar *scrollBar, double factor)
-{
+void ImageWidget::adjustScrollBar(QScrollBar *scrollBar, double factor) {
     /* scrollBar->setValue(int(factor * scrollBar->value() */
     /*                         + ((factor - 1) * scrollBar->pageStep()/2))); */
 }
 
-void ImageWidget::wheelEvent(QWheelEvent *event)
-{
+void ImageWidget::wheelEvent(QWheelEvent *event) {
     // QPoint numPixels = event->pixelDelta();
     QPoint numDegrees = event->angleDelta() / 8;
 
@@ -94,8 +89,7 @@ void ImageWidget::mouseReleaseEvent(QMouseEvent *event) {
     }
 }
 
-void ImageWidget::mouseMoveEvent(QMouseEvent *event)
-{
+void ImageWidget::mouseMoveEvent(QMouseEvent *event) {
     QOpenGLWidget::mouseMoveEvent(event);
 
     if (isMiddleButtonDown) {
@@ -112,8 +106,7 @@ void ImageWidget::mouseMoveEvent(QMouseEvent *event)
     event->accept();
 }
 
-void ImageWidget::initializeGL()
-{
+void ImageWidget::initializeGL() {
     initializeOpenGLFunctions();
 
     glEnable(GL_BLEND);
@@ -187,8 +180,7 @@ void ImageWidget::updateTextures() {
     }
 }
 
-void ImageWidget::paintGL()
-{
+void ImageWidget::paintGL() {
     if (backgroundTexture == 0) {
         Bitmap background = bitmap_create(image.width, image.height);
         for (int x = 0; x < image.width; x++) {
@@ -254,17 +246,14 @@ void ImageWidget::paintGL()
     update();
 }
 
-void ImageWidget::resizeGL(int width, int height)
-{
+void ImageWidget::resizeGL(int width, int height) {
     glViewport(0, 0, width, height);
 }
 
-ImageWidget::~ImageWidget()
-{
+ImageWidget::~ImageWidget() {
 }
 
-void ImageWidget::applyTools(QMouseEvent *event)
-{
+void ImageWidget::applyTools(QMouseEvent *event) {
     if (isLeftButtonDown) {
         QPoint lastPixelPosition = globalToCanvas(lastMousePosition) - QPoint(image.layers[activeLayerIndex].x, image.layers[activeLayerIndex].y);
         QPoint pixelPosition = globalToCanvas(mousePosition) - QPoint(image.layers[activeLayerIndex].x, image.layers[activeLayerIndex].y);
@@ -345,8 +334,7 @@ void ImageWidget::applyTools(QMouseEvent *event)
     }
 }
 
-void ImageWidget::useSprayCan()
-{
+void ImageWidget::useSprayCan() {
     QPoint pixelPosition = globalToCanvas(mousePosition);
     int x = pixelPosition.x();
     int y = pixelPosition.y();
@@ -361,8 +349,7 @@ void ImageWidget::useSprayCan()
     update();
 }
 
-void ImageWidget::rotate(int degrees)
-{
+void ImageWidget::rotate(int degrees) {
     switch (degrees) {
         case 90:
             {

@@ -17,8 +17,7 @@ struct PointQueue {
     Point *data;
 };
 
-PointQueue pq_create()
-{
+PointQueue pq_create() {
     return PointQueue {
         0,
         1024,
@@ -28,13 +27,11 @@ PointQueue pq_create()
     };
 }
 
-void pq_free(PointQueue *q)
-{
+void pq_free(PointQueue *q) {
     free(q->data);
 }
 
-void pq_push(PointQueue *q, Point p)
-{
+void pq_push(PointQueue *q, Point p) {
     if (q->end == q->capacity) {
         int oldCapacity = q->capacity;
         q->capacity *= 2;
@@ -50,8 +47,7 @@ void pq_push(PointQueue *q, Point p)
     q->end += 1;
 }
 
-bool pq_pop(PointQueue *q, Point *p)
-{
+bool pq_pop(PointQueue *q, Point *p) {
     if (q->size <= 0) {
         return false;
     }
@@ -61,13 +57,11 @@ bool pq_pop(PointQueue *q, Point *p)
     return true;
 }
 
-bool color_eq(Color c1, Color c2)
-{
+bool color_eq(Color c1, Color c2) {
     return (c1.r == c2.r && c1.g == c2.g && c1.b == c2.b && c1.a == c2.a);
 }
 
-Bitmap bitmap_create(int width, int height)
-{
+Bitmap bitmap_create(int width, int height) {
     int size = width * height * 4;
     unsigned char *data = (unsigned char*) malloc(sizeof(unsigned char) * size);
     for (int i = 0; i < size; i++) {
@@ -96,13 +90,11 @@ Bitmap bitmap_create_rotated(Bitmap *old) {
     return bitmap;
 }
 
-void bitmap_free(Bitmap *bitmap)
-{
+void bitmap_free(Bitmap *bitmap) {
     free(bitmap->data);
 }
 
-bool bitmap_get_pixel(Bitmap *bitmap, int x, int y, Color *color)
-{
+bool bitmap_get_pixel(Bitmap *bitmap, int x, int y, Color *color) {
     int w = bitmap->width;
     int h = bitmap->height;
     if (x >= 0 && x < w && y >= 0 && y < h)  {
@@ -115,8 +107,7 @@ bool bitmap_get_pixel(Bitmap *bitmap, int x, int y, Color *color)
     return false;
 }
 
-bool bitmap_draw_pixel(Bitmap *bitmap, int x, int y, Color color)
-{
+bool bitmap_draw_pixel(Bitmap *bitmap, int x, int y, Color color) {
     int offset = (y * bitmap->width + x) * 4;
     if (x >= 0 && x < bitmap->width && y >= 0 && y < bitmap->height)  {
         bitmap->data[offset] = color.r;
@@ -128,8 +119,7 @@ bool bitmap_draw_pixel(Bitmap *bitmap, int x, int y, Color color)
     return false;
 }
 
-bool bitmap_blend(Bitmap *bitmap, Bitmap *other, int offset_x, int offset_y)
-{
+bool bitmap_blend(Bitmap *bitmap, Bitmap *other, int offset_x, int offset_y) {
     // Only blend the portion of the other bitmap that overlaps with the base
     int width = MIN(other->width, bitmap->width - offset_x);
     int height = MIN(other->height, bitmap->height - offset_y);
@@ -166,8 +156,7 @@ bool bitmap_blend(Bitmap *bitmap, Bitmap *other, int offset_x, int offset_y)
     return false;
 }
 
-void bitmap_draw_line(Bitmap *bitmap, int x1, int y1, int x2, int y2, Color color)
-{
+void bitmap_draw_line(Bitmap *bitmap, int x1, int y1, int x2, int y2, Color color) {
     bitmap_draw_pixel(bitmap, x1, y1, color);
     bitmap_draw_pixel(bitmap, x2, y2, color);
     int width = abs(x2 - x1);
@@ -186,8 +175,7 @@ void bitmap_draw_line(Bitmap *bitmap, int x1, int y1, int x2, int y2, Color colo
     }
 }
 
-void bitmap_fill(Bitmap *bitmap, int x, int y, Color color)
-{
+void bitmap_fill(Bitmap *bitmap, int x, int y, Color color) {
     Color targetColor;
     if (bitmap_get_pixel(bitmap, x, y, &targetColor)) {
         PointQueue q = pq_create();

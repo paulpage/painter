@@ -69,6 +69,7 @@ private:
     QButtonGroup *colorGroup;
     QTreeView *layerList;
     QStandardItemModel *layerListModel;
+    ImageWidget *activeTab();
     Color pallette[PALLETTE_LENGTH] = {
         {0, 0, 0, 255},
         {255, 255, 255, 255},
@@ -107,7 +108,7 @@ private:
     void layerListModelUpdated(QStandardItem *item);
     void createFile(int width, int height);
     void addLayer(Layer layer);
-    ImageWidget *activeTab();
+    void updateImageActions(bool enabled);
 
     QAction *newAction;
     QAction *openAction;
