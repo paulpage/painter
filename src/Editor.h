@@ -109,6 +109,7 @@ private:
     void createFile(int width, int height);
     void addLayer(Layer layer);
     void updateImageActions(bool enabled);
+    void saveFile(QString filename);
 
     QAction *newAction;
     QAction *openAction;

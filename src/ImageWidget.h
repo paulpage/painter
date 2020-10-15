@@ -62,6 +62,7 @@ public:
     Tool activeTool = TOOL_PENCIL;
     Color activeColor = {0, 0, 0, 255};
     double scaleFactor = 1;
+    QString filename;
 
 signals:
     void sendColorChanged(Color color);

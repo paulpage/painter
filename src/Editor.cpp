@@ -314,37 +314,21 @@ void Editor::open() {
 }
 
 void Editor::save() {
-    QFileDialog dialog(this, tr("Save File"));
-    initializeImageFileDialog(&dialog, QFileDialog::AcceptSave);
-    QString fileName;
-    if (dialog.exec() == QDialog::Accepted) {
-        fileName = dialog.selectedFiles().at(0);
-        bool write = true;
-        QFile file(fileName);
-        if (file.exists()) {
-            QMessageBox confirmation;
-            QString message = QString(tr("Are you sure you want to overwrite %1?")).arg(fileName);
-            confirmation.setText(message);
-            confirmation.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
-            confirmation.setDefaultButton(QMessageBox::No);
-            confirmation.setIcon(QMessageBox::Warning);
-            write = (confirmation.exec() == QMessageBox::Yes);
-        }
-        if (write) {
-            QImage image(
-                    activeTab()->bitmap.data,
-                    activeTab()->bitmap.width,
-                    activeTab()->bitmap.height,
-                    activeTab()->bitmap.width * 4,
-                    QImage::Format_RGBA8888,
-                    nullptr,
-                    nullptr);
-            image.save(fileName);
-        }
+    if (activeTab()->filename.isNull()) {
+        saveAs();
+    } else {
+        saveFile(activeTab()->filename);
     }
 }
 
-void Editor::saveAs() {}
+void Editor::saveAs() {
+    QFileDialog dialog(this, tr("Save File"));
+    initializeImageFileDialog(&dialog, QFileDialog::AcceptSave);
+    if (dialog.exec() == QDialog::Accepted) {
+        activeTab()->filename = dialog.selectedFiles().at(0);
+        saveFile(activeTab()->filename);
+    }
+}
 
 void Editor::undo() {
     image_undo(&activeTab()->image, &activeTab()->hist);
@@ -431,6 +415,31 @@ void Editor::updateImageActions(bool enabled) {
     zoomOutAction->setEnabled(enabled);
     rotateAction->setEnabled(enabled);
     addLayerAction->setEnabled(enabled);
+}
+
+void Editor::saveFile(QString filename) {
+    bool write = true;
+    QFile file(filename);
+    if (file.exists()) {
+        QMessageBox confirmation;
+        QString message = QString(tr("Are you sure you want to overwrite %1?")).arg(filename);
+        confirmation.setText(message);
+        confirmation.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+        confirmation.setDefaultButton(QMessageBox::No);
+        confirmation.setIcon(QMessageBox::Warning);
+        write = (confirmation.exec() == QMessageBox::Yes);
+    }
+    if (write) {
+        QImage image(
+                activeTab()->bitmap.data,
+                activeTab()->bitmap.width,
+                activeTab()->bitmap.height,
+                activeTab()->bitmap.width * 4,
+                QImage::Format_RGBA8888,
+                nullptr,
+                nullptr);
+        image.save(filename);
+    }
 }
 
 Editor::~Editor() {}
