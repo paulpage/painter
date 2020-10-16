@@ -39,21 +39,15 @@ Layer layer_create_from_bitmap(const char *name, int x, int y, Bitmap bitmap) {
     return layer;
 }
 
-Image image_create(int width, int height, const char *filename) {
-    char *my_filename = (char*)malloc(strlen(filename) + 1);
-    strcpy(my_filename, filename);
-
+Image image_create(int width, int height) {
     return Image {
         width,
         height,
-        my_filename,
         NULL,
     };
 }
 
 Image image_copy(Image *original) {
-    char *filename = (char*)malloc(strlen(original->filename) + 1);
-    strcpy(filename, original->filename);
     Layer *layers = NULL;
     for (int i = 0; i < arrlen(original->layers); i++) {
         arrput(layers, layer_copy(&original->layers[i]));
@@ -61,14 +55,12 @@ Image image_copy(Image *original) {
     Image image = Image {
         original->width,
         original->height,
-        filename,
         layers,
     };
     return image;
 }
 
 void image_free(Image image) {
-    free(image.filename);
     for (int i = 0; i < arrlen(image.layers); i++) {
         layer_free(&image.layers[i]);
     }

@@ -269,9 +269,10 @@ void Editor::newLayer() {
 
 void Editor::createFile(int width, int height) {
     auto widget = new ImageWidget(this);
-    widget->image = image_create(width, height, "UNNAMED");
+    widget->image = image_create(width, height);
     widget->isImageInitialized = true;
-    tabs->addTab(widget, "UNNAMED");
+    widget->filename = "UNNAMED";
+    tabs->addTab(widget, widget->filename);
     tabs->setCurrentWidget(widget);
     Layer layer = layer_create("Unnamed Layer", 0, 0, width, height);
     addLayer(layer);
@@ -297,7 +298,7 @@ void Editor::open() {
             if (activeTab()->isImageInitialized) {
                 image_free(activeTab()->image);
             }
-            activeTab()->image = image_create(800, 600, "UNNAMED");
+            activeTab()->image = image_create(800, 600);
             activeTab()->isImageInitialized = true;
             activeTab()->scaleFactor = 1.0;
             activeTab()->updateTextures();

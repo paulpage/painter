@@ -13,7 +13,6 @@ struct Layer {
 struct Image {
     int width;
     int height;
-    char *filename;
     Layer *layers;
 };
 
@@ -27,7 +26,7 @@ Layer layer_create_from_bitmap(const char *name, int x, int y, Bitmap bitmap);
 Layer layer_copy(Layer *original);
 void layer_free(Layer *layer);
 
-Image image_create(int width, int height, const char *file_name);
+Image image_create(int width, int height);
 void image_free(Image image);
 Image image_copy(Image *original);
 void image_add_layer(Image *image, Layer layer);
