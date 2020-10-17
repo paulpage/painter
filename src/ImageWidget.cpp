@@ -13,7 +13,6 @@ ImageWidget::ImageWidget(QWidget *parent) {
     timer->setInterval(5);
     connect(timer, &QTimer::timeout, this, QOverload<>::of(&ImageWidget::useSprayCan));
     connect(this, SIGNAL(sendColorChanged(Color)), parent, SLOT(setActiveColor(Color)));
-
 }
 
 QPoint ImageWidget::globalToCanvas(QPoint g) {
@@ -70,6 +69,7 @@ void ImageWidget::mousePressEvent(QMouseEvent *event) {
     // is not sent when there are no buttons down.
     QOpenGLWidget::mousePressEvent(event);
     lastMousePosition = event->globalPos();
+    lastMouseDownPosition = event->globalPos();
     mousePosition = event->globalPos();
     isMiddleButtonDown = ((event->button() & Qt::MidButton) == Qt::MidButton);
     isLeftButtonDown = ((event->button() & Qt::LeftButton) == Qt::LeftButton);
@@ -87,6 +87,7 @@ void ImageWidget::mouseReleaseEvent(QMouseEvent *event) {
         image_take_snapshot(&image, &hist);
         timer->stop();
     }
+    bitmap_blend(&image.layers[activeLayerIndex].bitmap, &tempLayer.bitmap, tempLayer.x, tempLayer.y);
 }
 
 void ImageWidget::mouseMoveEvent(QMouseEvent *event) {
@@ -161,6 +162,7 @@ void ImageWidget::updateTextures() {
                 bitmap_blend(&bitmap, &image.layers[i].bitmap, image.layers[i].x, image.layers[i].y);
             }
         }
+        bitmap_blend(&bitmap, &tempLayer.bitmap, tempLayer.x, tempLayer.y);
 
         glEnable(GL_TEXTURE_2D);
 
@@ -255,8 +257,19 @@ ImageWidget::~ImageWidget() {
 
 void ImageWidget::applyTools(QMouseEvent *event) {
     if (isLeftButtonDown) {
+        // Translate mouse position to pixel position on the canvas
         QPoint lastPixelPosition = globalToCanvas(lastMousePosition) - QPoint(image.layers[activeLayerIndex].x, image.layers[activeLayerIndex].y);
+        QPoint lastMouseDownPixelPosition = globalToCanvas(lastMouseDownPosition) - QPoint(image.layers[activeLayerIndex].x, image.layers[activeLayerIndex].y);
         QPoint pixelPosition = globalToCanvas(mousePosition) - QPoint(image.layers[activeLayerIndex].x, image.layers[activeLayerIndex].y);
+
+        // Clear the temporary layer
+        for (int y = 0; y < tempLayer.bitmap.height; y++) {
+            for (int x = 0; x < tempLayer.bitmap.width; x++) {
+                Color c = {0, 0, 0, 0};
+                bitmap_draw_pixel(&tempLayer.bitmap, x, y, c);
+            }
+        }
+
         switch (activeTool) {
             case TOOL_PENCIL:
                 bitmap_draw_line(
@@ -325,6 +338,17 @@ void ImageWidget::applyTools(QMouseEvent *event) {
                 }
                 break;
             case TOOL_RECTANGLE_SELECT:
+                break;
+            case TOOL_LINE:
+                {
+                    bitmap_draw_line(
+                            &tempLayer.bitmap, 
+                            lastMouseDownPixelPosition.x(),
+                            lastMouseDownPixelPosition.y(),
+                            pixelPosition.x(),
+                            pixelPosition.y(),
+                            activeColor);
+                }
                 break;
             default:
                 break;

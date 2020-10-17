@@ -57,6 +57,7 @@ public:
     int activeLayerIndex;
     bool isImageInitialized = false;
     Image image;
+    Layer tempLayer;
     ImageHistory hist = (ImageHistory){0, -1};
     bool *layerVisibilityMask = NULL;
     Tool activeTool = TOOL_PENCIL;
@@ -72,6 +73,7 @@ private:
     QElapsedTimer *eTimer;
     QPoint mousePosition;
     QPoint lastMousePosition;
+    QPoint lastMouseDownPosition;
     int offsetX = 0;
     int offsetY = 0;
     QOpenGLTexture *texture;

@@ -85,6 +85,7 @@ Editor::Editor() {
         new QPushButton("Eraser"),
         new QPushButton("Move"),
         new QPushButton("Rectangle Select"),
+        new QPushButton("Line"),
     };
     for (int i = 0; i < FINAL_TOOL_COUNT; i++) {
         toolLayout->addWidget(toolButtons[i]);
@@ -270,6 +271,7 @@ void Editor::newLayer() {
 void Editor::createFile(int width, int height) {
     auto widget = new ImageWidget(this);
     widget->image = image_create(width, height);
+    widget->tempLayer = layer_create("temp", 0, 0, width, height);
     widget->isImageInitialized = true;
     widget->filename = "UNNAMED";
     tabs->addTab(widget, widget->filename);
@@ -299,6 +301,7 @@ void Editor::open() {
                 image_free(activeTab()->image);
             }
             activeTab()->image = image_create(800, 600);
+            activeTab()->tempLayer = layer_create("temp", 0, 0, 800, 600);
             activeTab()->isImageInitialized = true;
             activeTab()->scaleFactor = 1.0;
             activeTab()->updateTextures();

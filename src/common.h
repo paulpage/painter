@@ -10,6 +10,7 @@ enum Tool {
     TOOL_ERASER,
     TOOL_MOVE,
     TOOL_RECTANGLE_SELECT,
+    TOOL_LINE,
 
     FINAL_TOOL_COUNT, // Marks the end of the enum
 };
