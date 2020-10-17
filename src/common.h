@@ -11,6 +11,7 @@ enum Tool {
     TOOL_MOVE,
     TOOL_RECTANGLE_SELECT,
     TOOL_LINE,
+    TOOL_RECTANGLE,
 
     FINAL_TOOL_COUNT, // Marks the end of the enum
 };

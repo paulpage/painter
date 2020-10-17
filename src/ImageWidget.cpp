@@ -83,11 +83,19 @@ void ImageWidget::mousePressEvent(QMouseEvent *event) {
 void ImageWidget::mouseReleaseEvent(QMouseEvent *event) {
     isMiddleButtonDown = !((event->button() & Qt::MidButton) == Qt::MidButton);
     isLeftButtonDown = !((event->button() & Qt::LeftButton) == Qt::LeftButton);
+    
+    // Blend, then clear the temporary layer
+    bitmap_blend(&image.layers[activeLayerIndex].bitmap, &tempLayer.bitmap, tempLayer.x, tempLayer.y);
+    for (int y = 0; y < tempLayer.bitmap.height; y++) {
+        for (int x = 0; x < tempLayer.bitmap.width; x++) {
+            Color c = {0, 0, 0, 0};
+            bitmap_draw_pixel(&tempLayer.bitmap, x, y, c);
+        }
+    }
     if (!isLeftButtonDown) {
         image_take_snapshot(&image, &hist);
         timer->stop();
     }
-    bitmap_blend(&image.layers[activeLayerIndex].bitmap, &tempLayer.bitmap, tempLayer.x, tempLayer.y);
 }
 
 void ImageWidget::mouseMoveEvent(QMouseEvent *event) {
@@ -281,9 +289,9 @@ void ImageWidget::applyTools(QMouseEvent *event) {
                         activeColor);
                 break;
             case TOOL_PAINTBRUSH:
-                for (int y = -5; y < 5; y++) {
-                    for (int x = -5; x < 5; x++) {
-                        if (sqrt((double)(x * x) + (double)(y * y)) < 5.0f) {
+                for (int y = -brushSize/2; y < -brushSize/2 + brushSize; y++) {
+                    for (int x = -brushSize/2; x < -brushSize/2 + brushSize; x++) {
+                        if (sqrt((double)(x * x) + (double)(y * y)) < (double)brushSize/2.0f) {
                             bitmap_draw_line(
                                     &image.layers[activeLayerIndex].bitmap,
                                     lastPixelPosition.x() + x,
@@ -350,6 +358,40 @@ void ImageWidget::applyTools(QMouseEvent *event) {
                             activeColor);
                 }
                 break;
+            case TOOL_RECTANGLE:
+                {
+                    int x1 = MIN(lastMouseDownPixelPosition.x(), pixelPosition.x());
+                    int x2 = MAX(lastMouseDownPixelPosition.x(), pixelPosition.x());
+                    int y1 = MIN(lastMouseDownPixelPosition.y(), pixelPosition.y());
+                    int y2 = MAX(lastMouseDownPixelPosition.y(), pixelPosition.y());
+                    switch (fillMode) {
+                        case FILL_FILL:
+                            {
+                                for (int y = y1; y < y2; y++) {
+                                    bitmap_draw_line(&tempLayer.bitmap, x1, y, x2, y, activeColor);
+                                }
+                            }
+                            break;
+                        case FILL_OUTLINE:
+                            {
+                                for (int i = 0; i < brushSize; i++) {
+                                    if (x2 - i > x1 && y2 - i > y1) {
+                                        bitmap_draw_line(&tempLayer.bitmap, x1 + i, y1 + i, x2 - i, y1 + i, activeColor);
+                                        bitmap_draw_line(&tempLayer.bitmap, x1 + i, y2 - i, x2 - i, y2 - i, activeColor);
+                                        bitmap_draw_line(&tempLayer.bitmap, x1 + i, y1 + i, x1 + i, y2 - i, activeColor);
+                                        bitmap_draw_line(&tempLayer.bitmap, x2 - i, y1 + i, x2 - i, y2 - i, activeColor);
+                                    }
+                                }
+                                /* for (int i = -brushSize/2; i < -brushSize/2 + brushSize; i++) { */
+                                /* } */
+                            }
+                            break;
+                        default:
+                            break;
+
+                    }
+                    break;
+                }
             default:
                 break;
         }

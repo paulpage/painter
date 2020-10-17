@@ -29,6 +29,11 @@
 QT_FORWARD_DECLARE_CLASS(QOpenGLShaderProgram);
 QT_FORWARD_DECLARE_CLASS(QOpenGLTexture);
 
+enum FillMode {
+    FILL_FILL,
+    FILL_OUTLINE,
+};
+
 class ImageWidget : public QOpenGLWidget, protected QOpenGLFunctions
 {
     Q_OBJECT
@@ -64,6 +69,11 @@ public:
     Color activeColor = {0, 0, 0, 255};
     double scaleFactor = 1;
     QString filename;
+
+    // Tool settings
+    FillMode fillMode = FILL_OUTLINE;
+    int brushSize = 20;
+    bool snapEnabled = false;
 
 signals:
     void sendColorChanged(Color color);

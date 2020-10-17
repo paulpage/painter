@@ -86,6 +86,7 @@ Editor::Editor() {
         new QPushButton("Move"),
         new QPushButton("Rectangle Select"),
         new QPushButton("Line"),
+        new QPushButton("Rectangle"),
     };
     for (int i = 0; i < FINAL_TOOL_COUNT; i++) {
         toolLayout->addWidget(toolButtons[i]);
