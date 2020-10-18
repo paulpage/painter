@@ -339,10 +339,9 @@ void ImageWidget::applyTools(QMouseEvent *event) {
                 break;
             case TOOL_MOVE:
                 {
-                    QPoint diff = event->globalPos() - mousePosition;
-                    QPoint newPosition = globalToCanvas(event->globalPos() - diff);
-                    image.layers[activeLayerIndex].x = newPosition.x();
-                    image.layers[activeLayerIndex].y = newPosition.y();
+                    QPoint diff = pixelPosition - lastPixelPosition;
+                    image.layers[activeLayerIndex].x += diff.x();
+                    image.layers[activeLayerIndex].y += diff.y();
                 }
                 break;
             case TOOL_RECTANGLE_SELECT:
