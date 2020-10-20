@@ -201,6 +201,8 @@ Editor::Editor() {
 
     QMenu *imageMenu = menuBar()->addMenu(tr("&Image"));
     rotateAction = imageMenu->addAction(tr("&Rotate 90 degrees"), this, &Editor::rotate);
+    flipHorizontalAction = imageMenu->addAction(tr("Flip &Horizontal"), this, &Editor::flipHorizontal);
+    flipVerticalAction = imageMenu->addAction(tr("Flip &Vertical"), this, &Editor::flipVertical);
 
     QMenu *layerMenu = menuBar()->addMenu(tr("&Layer"));
     addLayerAction = layerMenu->addAction(tr("&Add layer"), this, &Editor::newLayer);
@@ -373,6 +375,12 @@ void Editor::fitToWindow() {}
 
 void Editor::rotate() {
     activeTab()->rotate(90);
+}
+
+void Editor::flipHorizontal() {
+}
+
+void Editor::flipVertical() {
 }
 
 void Editor::setActiveColor(Color color) {

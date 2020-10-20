@@ -421,12 +421,12 @@ void ImageWidget::rotate(int degrees) {
                 int oldY = image.height;
                 for (int i = 0; i < arrlen(image.layers); i++) {
                     Bitmap newBitmap = bitmap_create_rotated(&image.layers[i].bitmap);
-                    layer_free(&image.layers[i]);
                     Layer layer = layer_create_from_bitmap(
                             image.layers[i].name,
                             oldY - image.layers[i].y - image.layers[i].bitmap.height,
                             image.layers[i].x,
                             newBitmap);
+                    layer_free(&image.layers[i]);
                     image.layers[i] = layer;
                 }
                 updateTextures();
@@ -435,4 +435,17 @@ void ImageWidget::rotate(int degrees) {
         default:
             break;
     }
+}
+
+void ImageWidget::flipHorizontal() {
+    for (int i = 0; i < arrlen(image.layers); i++) {
+        Bitmap newBitmap = bitmap_create_rotated(&image.layers[i].bitmap);
+
+        // TODO finish this when I have the bitmap functions done.
+
+        layer_free(&image.layers[i]);
+    }
+}
+
+void ImageWidget::flipVertical() {
 }

@@ -58,6 +58,8 @@ private slots:
     void normalSize();
     void fitToWindow();
     void rotate();
+    void flipHorizontal();
+    void flipVertical();
     void newLayer();
 
     void setActiveColor(Color color);
