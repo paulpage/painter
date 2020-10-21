@@ -419,7 +419,11 @@ void ImageWidget::rotate(int degrees) {
         case 90:
             {
                 int oldY = image.height;
+                int temp = image.width;
+                image.width = image.height;
+                image.height = temp;
                 for (int i = 0; i < arrlen(image.layers); i++) {
+
                     Bitmap newBitmap = bitmap_create_rotated(&image.layers[i].bitmap);
                     Layer layer = layer_create_from_bitmap(
                             image.layers[i].name,
