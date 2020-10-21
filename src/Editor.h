@@ -128,6 +128,8 @@ private:
     QAction *normalSizeAction;
     QAction *fitToWindowAction;
     QAction *rotateAction;
+    QAction *flipHorizontalAction;
+    QAction *flipVerticalAction;
     QAction *addLayerAction;
 };
 #endif // MAINWINDOW_H

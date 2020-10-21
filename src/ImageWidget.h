@@ -57,6 +57,8 @@ public:
     void resizeGL(int width, int height) override;
     void updateTextures();
     void rotate(int degrees);
+    void flipHorizontal();
+    void flipVertical();
     Bitmap bitmap = bitmap_create(0, 0);
 
     int activeLayerIndex;

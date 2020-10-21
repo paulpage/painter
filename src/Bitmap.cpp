@@ -90,9 +90,30 @@ Bitmap bitmap_create_rotated(Bitmap *old) {
     return bitmap;
 }
 
-Bitmap bitmap_create_flipped(Bitmap *old, bool flip_x, bool flip_y) {
-    Bitmap bitmap = bitmap_crate(old->width, old->height);
-    // TODO this is where I left off implementing bitmap flipping.
+Bitmap bitmap_create_flipped_horizontal(Bitmap *old) {
+    Bitmap bitmap = bitmap_create(old->width, old->height);
+    for (int y = 0; y < bitmap.height; y++) {
+        for (int x = 0; x < bitmap.width; x++) {
+            Color c;
+            if (bitmap_get_pixel(old, x, y, &c)) {
+                bitmap_draw_pixel(&bitmap, bitmap.width - 1 - x, y, c);
+            }
+        }
+    }
+    return bitmap;
+}
+
+Bitmap bitmap_create_flipped_vertical(Bitmap *old) {
+    Bitmap bitmap = bitmap_create(old->width, old->height);
+    for (int y = 0; y < bitmap.height; y++) {
+        for (int x = 0; x < bitmap.width; x++) {
+            Color c;
+            if (bitmap_get_pixel(old, x, y, &c)) {
+                bitmap_draw_pixel(&bitmap, x, bitmap.height - 1 - y, c);
+            }
+        }
+    }
+    return bitmap;
 }
 
 void bitmap_free(Bitmap *bitmap) {

@@ -378,9 +378,11 @@ void Editor::rotate() {
 }
 
 void Editor::flipHorizontal() {
+    activeTab()->flipHorizontal();
 }
 
 void Editor::flipVertical() {
+    activeTab()->flipVertical();
 }
 
 void Editor::setActiveColor(Color color) {
@@ -427,6 +429,8 @@ void Editor::updateImageActions(bool enabled) {
     zoomInAction->setEnabled(enabled);
     zoomOutAction->setEnabled(enabled);
     rotateAction->setEnabled(enabled);
+    flipHorizontalAction->setEnabled(enabled);
+    flipVerticalAction->setEnabled(enabled);
     addLayerAction->setEnabled(enabled);
 }
 

@@ -17,6 +17,8 @@ struct Bitmap {
 
 Bitmap bitmap_create(int width, int height);
 Bitmap bitmap_create_rotated(Bitmap *old);
+Bitmap bitmap_create_flipped_horizontal(Bitmap *old);
+Bitmap bitmap_create_flipped_vertical(Bitmap *old);
 void bitmap_free(Bitmap *bitmap);
 bool bitmap_get_pixel(Bitmap *bitmap, int x, int y, Color *color);
 bool bitmap_blend_pixel(Bitmap *bitmap, int x, int y, Color color);
