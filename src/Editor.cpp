@@ -234,7 +234,7 @@ void Editor::colorButtonClicked(QAbstractButton *button) {
 
 void Editor::layerListSelectionChanged() {
     int i = layerList->selectionModel()->selectedIndexes().first().row();
-    activeTab()->activeLayerIndex = i;
+    activeTab()->setActiveLayer(i);
 }
 
 void Editor::layerListModelUpdated(QStandardItem *item) {
@@ -411,7 +411,7 @@ void Editor::refreshLayerList() {
 void Editor::addLayer(Layer layer) {
     image_add_layer(&activeTab()->image, layer);
     arrput(activeTab()->layerVisibilityMask, true);
-    activeTab()->activeLayerIndex = arrlen(activeTab()->image.layers) - 1;
+    activeTab()->setActiveLayer(arrlen(activeTab()->image.layers) - 1);
     // TODO if this gets undone the visibility mask won't get undone. Come to think of it, we could probably just add is_visible to the layer. Also need to update the layer list when we undo.
     image_take_snapshot(&activeTab()->image, &activeTab()->hist);
     refreshLayerList();

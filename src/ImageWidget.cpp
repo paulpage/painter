@@ -85,7 +85,7 @@ void ImageWidget::mouseReleaseEvent(QMouseEvent *event) {
     isLeftButtonDown = !((event->button() & Qt::LeftButton) == Qt::LeftButton);
     
     // Blend, then clear the temporary layer
-    bitmap_blend(&image.layers[activeLayerIndex].bitmap, &tempLayer.bitmap, tempLayer.x, tempLayer.y);
+    bitmap_blend(&image.layers[activeLayerIndex].bitmap, &tempLayer.bitmap, 0, 0);
     for (int y = 0; y < tempLayer.bitmap.height; y++) {
         for (int x = 0; x < tempLayer.bitmap.width; x++) {
             Color c = {0, 0, 0, 0};
@@ -342,6 +342,8 @@ void ImageWidget::applyTools(QMouseEvent *event) {
                     QPoint diff = pixelPosition - lastPixelPosition;
                     image.layers[activeLayerIndex].x += diff.x();
                     image.layers[activeLayerIndex].y += diff.y();
+                    tempLayer.x += diff.x();
+                    tempLayer.y += diff.y();
                 }
                 break;
             case TOOL_RECTANGLE_SELECT:
@@ -457,4 +459,10 @@ void ImageWidget::flipVertical() {
         image.layers[i].bitmap = newBitmap;
     }
     updateTextures();
+}
+
+void ImageWidget::setActiveLayer(int index) {
+    activeLayerIndex = index;
+    tempLayer.x = image.layers[activeLayerIndex].x;
+    tempLayer.y = image.layers[activeLayerIndex].y;
 }

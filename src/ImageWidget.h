@@ -59,6 +59,8 @@ public:
     void rotate(int degrees);
     void flipHorizontal();
     void flipVertical();
+    void setActiveLayer(int index);
+
     Bitmap bitmap = bitmap_create(0, 0);
 
     int activeLayerIndex;
